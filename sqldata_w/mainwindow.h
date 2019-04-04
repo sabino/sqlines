@@ -16,8 +16,8 @@
 #define INI_TARGET                      "target"
 #define INI_ORACLE_CONNECTIONS          "oracle_connections"
 #define INI_ORACLE_T_CONNECTIONS        "t_oracle_connections"
-#define INI_SQL_SERVER_CONNECTIONS      "sql_server_connections"
-#define INI_SQL_SERVER_S_CONNECTIONS    "s_sql_server_connections"
+#define INI_SQL_BIGQUERY_CONNECTIONS      "SQL_BIGQUERY_connections"
+#define INI_SQL_BIGQUERY_S_CONNECTIONS    "s_SQL_BIGQUERY_connections"
 #define INI_MYSQL_CONNECTIONS           "mysql_connections"
 #define INI_MYSQL_S_CONNECTIONS         "s_mysql_connections"
 #define INI_PG_CONNECTIONS              "pg_connections"
@@ -28,10 +28,10 @@
 #define INI_DB2_T_CONNECTIONS           "t_db2_connections"
 
 #define INI_LAST_ORACLE_CONNECTION      "last_oracle_connection"
-#define INI_LAST_SQL_SERVER_CONNECTION  "last_sql_server_connection"
+#define INI_LAST_SQL_BIGQUERY_CONNECTION  "last_SQL_BIGQUERY_connection"
 
-#define INI_LAST_SQL_SERVER_S_DATABASE  "last_sql_server_s_database"
-#define INI_LAST_SQL_SERVER_DATABASE    "last_sql_server_database"
+#define INI_LAST_SQL_BIGQUERY_S_DATABASE  "last_SQL_BIGQUERY_s_database"
+#define INI_LAST_SQL_BIGQUERY_DATABASE    "last_SQL_BIGQUERY_database"
 
 #define INI_ORACLE_USERNAME             "ou"
 #define INI_ORACLE_T_USERNAME           "t_ou"
@@ -40,16 +40,16 @@
 #define INI_ORACLE_SAVE_PASSWORD        "sop"
 #define INI_ORACLE_T_SAVE_PASSWORD      "t_sop"
 
-#define INI_SQL_SERVER_USERNAME         "su"
-#define INI_SQL_SERVER_S_USERNAME       "s_su"
-#define INI_SQL_SERVER_PASSWORD         "sp"
-#define INI_SQL_SERVER_S_PASSWORD       "s_sp"
-#define INI_SQL_SERVER_SAVE_PASSWORD    "ssp"
-#define INI_SQL_SERVER_S_SAVE_PASSWORD  "s_ssp"
-#define INI_SQL_SERVER_AUTH             "sql_server_win_auth"
-#define INI_SQL_SERVER_S_AUTH           "s_sql_server_win_auth"
-#define INI_SQL_SERVER_DATABASES        "sql_server_databases"
-#define INI_SQL_SERVER_S_DATABASES      "s_sql_server_databases"
+#define INI_SQL_BIGQUERY_USERNAME         "su"
+#define INI_SQL_BIGQUERY_S_USERNAME       "s_su"
+#define INI_SQL_BIGQUERY_PASSWORD         "sp"
+#define INI_SQL_BIGQUERY_S_PASSWORD       "s_sp"
+#define INI_SQL_BIGQUERY_SAVE_PASSWORD    "ssp"
+#define INI_SQL_BIGQUERY_S_SAVE_PASSWORD  "s_ssp"
+#define INI_SQL_BIGQUERY_AUTH             "SQL_BIGQUERY_win_auth"
+#define INI_SQL_BIGQUERY_S_AUTH           "s_SQL_BIGQUERY_win_auth"
+#define INI_SQL_BIGQUERY_DATABASES        "SQL_BIGQUERY_databases"
+#define INI_SQL_BIGQUERY_S_DATABASES      "s_SQL_BIGQUERY_databases"
 
 #define INI_MYSQL_USERNAME              "mu"
 #define INI_MYSQL_S_USERNAME            "s_mu"
@@ -177,8 +177,8 @@ public slots:
     void ExitApp();
     void UpdateLog();
     void UpdateRawLog();
-    void SqlServerWindowsAuthChecked(int state);
-    void SqlServerSWindowsAuthChecked(int state);
+    void BigQueryWindowsAuthChecked(int state);
+    void BigQuerySWindowsAuthChecked(int state);
     void TestSourceConnection();
     void TestTargetConnection();
     void SelectTablesFile();
@@ -196,7 +196,7 @@ private:
     void GetSourceConnectionString(std::string &source);
     void GetTargetConnectionString(std::string &target);
     void GetOracleConnectionString(std::string &conn, bool source);
-    void GetSqlServerConnectionString(std::string &conn, bool source);
+    void GetBigQueryConnectionString(std::string &conn, bool source);
     void GetMysqlConnectionString(std::string &conn, bool source);
     void GetPgConnectionString(std::string &conn);
     void GetAseConnectionString(std::string &conn);

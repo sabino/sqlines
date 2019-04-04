@@ -323,7 +323,7 @@ bool SqlParser::ParseTypedVariable(Token *var, Token *ref_type)
     // %TYPE and %ROWTYPE in Oracle
     Token *cent = GetNextCharToken('%', L'%');
 
-    Token *type = NULL; 
+    Token *type = NULL;
     Token *rowtype = NULL;
 
     Token *like = NULL;
@@ -337,10 +337,10 @@ bool SqlParser::ParseTypedVariable(Token *var, Token *ref_type)
 
     if(cent != NULL)
     {
-        type = GetNextWordToken("TYPE", L"TYPE", 4); 
+        type = GetNextWordToken("TYPE", L"TYPE", 4);
 
         if(type == NULL)
-            rowtype = GetNextWordToken("ROWTYPE", L"ROWTYPE", 7); 
+            rowtype = GetNextWordToken("ROWTYPE", L"ROWTYPE", 7);
 
         if(type == NULL && rowtype == NULL)
             return false;
@@ -354,7 +354,7 @@ bool SqlParser::ParseTypedVariable(Token *var, Token *ref_type)
     UDTYPE_DTL_STATS_L(var)
 
     // No conversion required
-    if(Source(SQL_ORACLE, SQL_POSTGRESQL, SQL_NETEZZA) == true && 
+    if(Source(SQL_ORACLE, SQL_POSTGRESQL, SQL_NETEZZA) == true &&
         Target(SQL_ORACLE, SQL_POSTGRESQL, SQL_NETEZZA) == true)
         return true;
 
@@ -396,7 +396,7 @@ bool SqlParser::ParseTypedVariable(Token *var, Token *ref_type)
                 Token::Remove(like);
             }
             else
-                if(Target(SQL_SQL_SERVER) == true)
+                if(Target(SQL_BIGQUERY) == true)
                 {
                     TokenStr type(" ", L" ", 1);
                     GuessType(col, type);
@@ -458,14 +458,14 @@ bool SqlParser::ParseBigdatetimeType(Token *name)
         return false;
 
     // Convert to DATETIME2(6) in SQL Server
-    if(_target == SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY)
         Token:: Change(name, "DATETIME2(6)", L"DATETIME2(6)", 12);
     else
         // Convet to TIMESTAMP in Oracle, PostgreSQL
         if(Target(SQL_ORACLE, SQL_POSTGRESQL) == true)
             Token::Change(name, "TIMESTAMP", L"TIMESTAMP", 9);
 
-    
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -515,8 +515,11 @@ bool SqlParser::ParseBigintType(Token *name, int clause_scope)
     }
     else
         // Remove [] for other databases
-        if(_target != SQL_SQL_SERVER && bigint_in_braces == true)
+        if(_target != SQL_BIGQUERY && bigint_in_braces == true)
             Token::ChangeNoFormat(name, name, 1, name->len - 2);
+
+    if(_target == SQL_BIGQUERY && _source != SQL_BIGQUERY)
+        Token::Change(name, "INT64", L"INT64", 5);
 
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
@@ -551,7 +554,7 @@ bool SqlParser::ParseBigserialType(Token *name)
         Token::Change(name, "NUMBER(19)", L"NUMBER(19)", 10);
     else
         // Convert to BIGINT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "BIGINT", L"BIGINT", 6);
 
     DTYPE_STATS(name)
@@ -578,13 +581,13 @@ bool SqlParser::ParseBigtimeType(Token *name)
         {
             Token::Change(name, "TIME", L"TIME", 4);
 
-            if(_target == SQL_SQL_SERVER)
+            if(_target == SQL_BIGQUERY)
                 Append(name, "(6)", L"(6)", 3);
         }
 
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
-    
+
     return true;
 }
 
@@ -702,7 +705,7 @@ bool SqlParser::ParseBinaryType(Token *name)
             }
             else
                 // Convert to VARBINARY in SQL Server
-                if(_target == SQL_SQL_SERVER)
+                if(_target == SQL_BIGQUERY)
                 {
                     // BINARY is semantically equivalent to VARBINARY in Sybase ASA
                     if(_source == SQL_SYBASE_ASA)
@@ -722,7 +725,7 @@ bool SqlParser::ParseBinaryType(Token *name)
                     }
                     else
                         // Remove [] for other databases
-                        if(_target != SQL_SQL_SERVER && binary_in_braces == true)
+                        if(_target != SQL_BIGQUERY && binary_in_braces == true)
                             Token::ChangeNoFormat(name, name, 1, name->len - 2);
         }
 
@@ -851,7 +854,7 @@ bool SqlParser::ParseBitType(Token *name)
         }
         else
         // Convert to BINARY in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Remove(name);
             Token::Change(varying, "BINARY", L"BINARY", 6);
@@ -887,7 +890,7 @@ bool SqlParser::ParseBitType(Token *name)
         }
         else
         // Convert MySQL BIT to BINARY in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             if(_source == SQL_MYSQL)
                 Token::Change(name, "BINARY", L"BINARY", 6);
@@ -906,7 +909,7 @@ bool SqlParser::ParseBitType(Token *name)
             Token::Change(name, "SMALLINT", L"SMALLINT", 8);
         else
         // Remove [] for other databases
-        if(_target != SQL_SQL_SERVER && bit_in_braces == true)
+        if(_target != SQL_BIGQUERY && bit_in_braces == true)
             Token::ChangeNoFormat(name, name, 1, name->len - 2);
     }
 
@@ -950,10 +953,10 @@ bool SqlParser::ParseBlobType(Token *name)
     }
 
     // Convert to VARBINARY(max) in SQL Server
-    if(_target == SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY)
     {
         Token::Change(name, "VARBINARY", L"VARBINARY", 9);
-        AppendNoFormat(name, "(max)", L"(max)", 5);
+        // AppendNoFormat(name, "(max)", L"(max)", 5);
     }
     else
         // Convert to LONGBLOB in MySQL
@@ -984,8 +987,8 @@ bool SqlParser::ParseBooleanType(Token *name)
         Token::Change(name, "CHAR(1)", L"CHAR(1)", 7);
     else
         // Convert to BIT in SQL Server
-        if(_target == SQL_SQL_SERVER)
-            Token::Change(name, "BIT", L"BIT", 3);
+        if(_target == SQL_BIGQUERY)
+            Token::Change(name, "BOOLEAN", L"BOOLEAN", 7);
 
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
@@ -1043,10 +1046,10 @@ bool SqlParser::ParseByteType(Token *name)
     }
     else
         // Convert to VARBINARY(max) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Change(name, "VARBINARY", L"VARBINARY", 9);
-            AppendNoFormat(name, "(max)", L"(max)", 5);
+            // AppendNoFormat(name, "(max)", L"(max)", 5);
         }
         else
             // Convert to LONGBLOB in MySQL
@@ -1082,7 +1085,7 @@ bool SqlParser::ParseByteintType(Token *name)
 
     name->data_type = TOKEN_DT_NUMBER;
     name->data_subtype = TOKEN_DT2_INT8;
-        
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -1210,7 +1213,7 @@ bool SqlParser::ParseCharacterType(Token *name, int clause_scope)
             }
             else
                 // Convert DB2 CHARACTER VARYING FOR BIT DATA to VARBINARY in SQL Server
-                if(_target == SQL_SQL_SERVER)
+                if(_target == SQL_BIGQUERY)
                 {
                     Token::Remove(name);
                     Token::Change(varying, "VARBINARY", L"VARBINARY", 9);
@@ -1242,8 +1245,8 @@ bool SqlParser::ParseCharacterType(Token *name, int clause_scope)
                 }
                 else
                     // Convert DB2 CHARACTER FOR BIT DATA to BINARY in SQL Server
-                    if(_target == SQL_SQL_SERVER)
-                        Token::Change(name, "BINARY", L"BINARY", 6);
+                    if(_target == SQL_BIGQUERY)
+                        Token::Change(name, "BLOB", L"BLOB", 4);
                     else
                         // Convert DB2 CHARACTER FOR BIT DATA to BYTEA in PostgreSQL
                         if(_target == SQL_POSTGRESQL)
@@ -1272,7 +1275,7 @@ bool SqlParser::ParseCharacterType(Token *name, int clause_scope)
                                 Append(varying, "(4000)", L"(4000)", 6);
                             else
                                 // Size is 1 by default in SQL Server, Informix, Sybase ASE, Sybase ASA
-                                if(Source(SQL_SQL_SERVER, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
+                                if(Source(SQL_BIGQUERY, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
                                     Append(varying, "(1)", L"(1)", 3);
                         }
                     }
@@ -1304,11 +1307,11 @@ bool SqlParser::ParseCharacterType(Token *name, int clause_scope)
                     }
                     else
                         // Remove [] for other databases
-                        if(_target != SQL_SQL_SERVER && character_in_braces == true)
+                        if(_target != SQL_BIGQUERY && character_in_braces == true)
                             Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     // If target is Oracle, and used in parameter list, remove length specification
-    if(_target == SQL_ORACLE && 
+    if(_target == SQL_ORACLE &&
         (clause_scope == SQL_SCOPE_FUNC_PARAMS || clause_scope == SQL_SCOPE_PROC_PARAMS))
         Token::Remove(open, close);
 
@@ -1448,7 +1451,7 @@ bool SqlParser::ParseCharType(Token *name, int clause_scope)
         }
         else
         // Convert DB2 CHAR VARYING FOR BIT DATA to VARBINARY in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Remove(name);
             Token::Change(varying, "VARBINARY", L"VARBINARY", 9);
@@ -1480,7 +1483,7 @@ bool SqlParser::ParseCharType(Token *name, int clause_scope)
         }
         else
             // Convert DB2 CHAR FOR BIT DATA to BINARY in SQL Server
-            if(_target == SQL_SQL_SERVER)
+            if(_target == SQL_BIGQUERY)
                 Token::Change(name, "BINARY", L"BINARY", 6);
             else
                 // Convert DB2 CHAR FOR BIT DATA to BYTEA in PostgreSQL
@@ -1510,7 +1513,7 @@ bool SqlParser::ParseCharType(Token *name, int clause_scope)
                     Append(varying, "(4000)", L"(4000)", 6);
                 else
                     // Size is 1 by default in SQL Server, Informix, Sybase ASE, Sybase ASA
-                    if(Source(SQL_SQL_SERVER, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
+                    if(Source(SQL_BIGQUERY, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
                         Append(varying, "(1)", L"(1)", 3);
             }
         }
@@ -1532,6 +1535,12 @@ bool SqlParser::ParseCharType(Token *name, int clause_scope)
         if(size != NULL)
             num = size->GetInt();
 
+        if(_source != SQL_BIGQUERY && _target == SQL_BIGQUERY)
+        {
+            TOKEN_CHANGE(name, "STRING");
+            Token::Remove(open, close);
+        }
+        else
         // If size is greater than 255 convert to VARCHAR in MySQL
         if(num > 255 && Target(SQL_MARIADB, SQL_MYSQL))
             Token::Change(name, "VARCHAR", L"VARCHAR", 7);
@@ -1551,7 +1560,7 @@ bool SqlParser::ParseCharType(Token *name, int clause_scope)
     }
     else
     // Remove [] for other databases
-    if(_target != SQL_SQL_SERVER && char_in_braces == true)
+    if(_target != SQL_BIGQUERY && char_in_braces == true)
         Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_DTL_STATS_L(name)
@@ -1595,7 +1604,7 @@ bool SqlParser::ParseClobType(Token *name)
     }
 
     // Convert to VARCHAR(max) in SQL Server
-    if(_target == SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY)
     {
         Token::Change(name, "VARCHAR", L"VARCHAR", 7);
         AppendNoFormat(name, "(max)", L"(max)", 5);
@@ -1736,7 +1745,7 @@ bool SqlParser::ParseDatetimeType(Token *name)
             Token::Change(name, "TIMESTAMP", L"TIMESTAMP", 9);
 
         // Fraction is 3 by default in SQL Server, Sybase ASE
-        if(Source(SQL_SQL_SERVER, SQL_SYBASE) && open == NULL)
+        if(Source(SQL_BIGQUERY, SQL_SYBASE) && open == NULL)
             Append(name, "(3)", L"(3)", 3);
         else
         // Fraction is 0 by default in MySQL
@@ -1770,13 +1779,13 @@ bool SqlParser::ParseDatetimeType(Token *name)
                     Token::Remove(first_unit, second_unit);
                 }
             }
-        }		
+        }
     }
     else
     // Convert to DATETIME2(6) in SQL Server
-    if(_target == SQL_SQL_SERVER && _source != SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY && _source != SQL_BIGQUERY)
     {
-        Token::Change(name, "DATETIME2", L"DATETIME2", 9);
+        Token::Change(name, "DATETIME", L"DATETIME", 8);
 
         // Remove units
         if(_source == SQL_INFORMIX)
@@ -1807,13 +1816,13 @@ bool SqlParser::ParseDatetimeType(Token *name)
         if(open == NULL)
         {
             // Fraction is 3 in SQL Server, Sybase ASE
-            if(Source(SQL_SQL_SERVER, SQL_SYBASE))
+            if(Source(SQL_BIGQUERY, SQL_SYBASE))
                 Append(name, "(3)", L"(3)", 3);
         }
     }
     else
     // Remove [] for other databases
-    if(_target != SQL_SQL_SERVER && datetime_in_braces == true)
+    if(_target != SQL_BIGQUERY && datetime_in_braces == true)
         Token::ChangeNoFormat(name, name, 1, name->len - 2);
     else
     // Remove "" for other databases
@@ -1889,8 +1898,11 @@ bool SqlParser::ParseDatetime2Type(Token *name)
     }
     else
     // Remove [] for other databases
-    if(_target != SQL_SQL_SERVER && datetime2_in_braces == true)
+    if(_target != SQL_BIGQUERY && datetime2_in_braces == true)
         Token::ChangeNoFormat(name, name, 1, name->len - 2);
+
+    if(_target == SQL_BIGQUERY)
+        Token::Change(name, "DATETIME", L"DATETIME", 8);
 
     DTYPE_DTL_STATS_L(name)
     return true;
@@ -1939,7 +1951,7 @@ bool SqlParser::ParseDatetimeoffsetType(Token *name)
         if(open == NULL)
         {
             // Fraction is 7 by default in SQL Server, but max fraction is 6 in PostgreSQL
-            if(_source == SQL_SQL_SERVER)
+            if(_source == SQL_BIGQUERY)
                 Append(name, "(6)", L"(6)", 3);
         }
         else
@@ -1953,7 +1965,7 @@ bool SqlParser::ParseDatetimeoffsetType(Token *name)
     }
     else
         // Fraction is 6 by default in Sybase ASA
-        if(_target == SQL_SQL_SERVER && _source == SQL_SYBASE_ASA)
+        if(_target == SQL_BIGQUERY && _source == SQL_SYBASE_ASA)
             Append(name, "(6)", L"(6)", 3);
         else
             // Convert to DATETIME in MySQL
@@ -1964,7 +1976,7 @@ bool SqlParser::ParseDatetimeoffsetType(Token *name)
                 if(open == NULL)
                 {
                     // Fraction is 7 by default in SQL Server, but max fraction is 6 in MySQL
-                    if(_source == SQL_SQL_SERVER)
+                    if(_source == SQL_BIGQUERY)
                         Append(name, "(6)", L"(6)", 3);
                 }
                 else
@@ -1974,7 +1986,7 @@ bool SqlParser::ParseDatetimeoffsetType(Token *name)
             }
             else
                 // Remove [] for other databases
-                if(_target != SQL_SQL_SERVER && datetimeofset_in_braces == true)
+                if(_target != SQL_BIGQUERY && datetimeofset_in_braces == true)
                     Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_DTL_STATS_L(name)
@@ -2004,7 +2016,7 @@ bool SqlParser::ParseDateType(Token *name)
     // Check for Oracle DATE
     if(_source == SQL_ORACLE)
     {
-        if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL, SQL_SYBASE))
+        if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL, SQL_SYBASE))
             Token::Change(name, "DATETIME", L"DATETIME", 8);
         else
         if(Target(SQL_DB2, SQL_POSTGRESQL, SQL_GREENPLUM, SQL_ESGYNDB))
@@ -2012,9 +2024,9 @@ bool SqlParser::ParseDateType(Token *name)
     }
     else
         // Remove [] for other databases
-        if(_target != SQL_SQL_SERVER && date_in_braces == true)
+        if(_target != SQL_BIGQUERY && date_in_braces == true)
             Token::ChangeNoFormat(name, name, 1, name->len - 2);
-        
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -2061,7 +2073,7 @@ bool SqlParser::ParseDbclobType(Token *name)
         Token::Change(name, "NCLOB", L"NCLOB", 5);
     else
         // Convert to NVARCHAR(max) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Change(name, "NVARCHAR", L"NVARCHAR", 8);
             AppendNoFormat(name, "(max)", L"(max)", 5);
@@ -2107,7 +2119,7 @@ bool SqlParser::ParseDecfloatType(Token *name)
     }
     else
         // Convert to FLOAT in SQL Server, PostgreSQL
-        if(Target(SQL_SQL_SERVER, SQL_POSTGRESQL) == true)
+        if(Target(SQL_BIGQUERY, SQL_POSTGRESQL) == true)
         {
             Token::Change(name, "FLOAT", L"FLOAT", 5);
 
@@ -2185,10 +2197,17 @@ bool SqlParser::ParseDecimalType(Token *name, int clause_scope)
         }
         else
         // DECIMAL(18,0) is default in SQL Server and Sybase ASE
-        if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true && Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+        if(Source(SQL_SYBASE) == true && Target(SQL_SYBASE) == false)
         {
             Append(name, "(18,0)", L"(18,0)", 6);
             conv = true;
+        }
+        else
+        if(_target == SQL_BIGQUERY && _source != SQL_BIGQUERY)
+        {
+            //Append(name, "(38,9)", L"(38,9)", 6);
+            Token::Change(name, "NUMERIC", L"NUMERIC", 7);
+            //conv = true
         }
         else
         // DECIMAL(5,0) is default in DB2
@@ -2232,7 +2251,7 @@ bool SqlParser::ParseDecimalType(Token *name, int clause_scope)
     }
     else
     // Remove [] for other databases
-    if(_target != SQL_SQL_SERVER && decimal_in_braces == true)
+    if(_target != SQL_BIGQUERY && decimal_in_braces == true)
     {
         Token::ChangeNoFormat(name, name, 1, name->len - 2);
         conv = true;
@@ -2294,16 +2313,16 @@ bool SqlParser::ParseDoubleType(Token *name)
         conv = true;
     }
     else
-    // Convert to FLOAT in SQL Server
-    if(_target == SQL_SQL_SERVER && _source != SQL_SQL_SERVER)
+    // Convert to FLOAT64 in BigQuery
+    if(_target == SQL_BIGQUERY && _source != SQL_BIGQUERY)
     {
         if(prec != NULL)
         {
             Token::Remove(name);
-            Token::Change(prec, "FLOAT", L"FLOAT", 5);
+            Token::Change(prec, "FLOAT64", L"FLOAT64", 7);
         }
         else
-            Token::Change(name, "FLOAT", L"FLOAT", 5);
+            Token::Change(name, "FLOAT64", L"FLOAT64", 7);
 
         conv = true;
     }
@@ -2343,10 +2362,10 @@ bool SqlParser::ParseFixedType(Token *name)
     if(open != NULL)
     {
         /*Token *precision */ (void) GetNextNumberToken();
-        Token *comma = GetNextCharToken(',', L',');	
+        Token *comma = GetNextCharToken(',', L',');
 
         if(comma != NULL)
-            /*Token *scale */ (void) GetNextNumberToken(); 
+            /*Token *scale */ (void) GetNextNumberToken();
 
         /*Token *close */ (void) GetNextCharToken(')', L')');
     }
@@ -2360,7 +2379,7 @@ bool SqlParser::ParseFixedType(Token *name)
             Append(name, "(10,0)", L"(10,0)", 6);
     }
     else
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Change(name, "DECIMAL", L"DECIMAL", 7);
 
@@ -2430,8 +2449,8 @@ bool SqlParser::ParseFloatType(Token *name)
             Token::Remove(open, close);
     }
     else
-    // Remove precision for SQL Server
-    if(_target == SQL_SQL_SERVER && Source(SQL_SYBASE_ASA, SQL_SQL_SERVER) == false && open != NULL)
+    // BigQuery
+    if(_target == SQL_BIGQUERY && Source(SQL_SYBASE_ASA, SQL_BIGQUERY) == false && open != NULL)
     {
         Token::Remove(open, close);
         conv = true;
@@ -2458,11 +2477,15 @@ bool SqlParser::ParseFloatType(Token *name)
     }
     else
     // Remove [] for other databases
-    if(_target != SQL_SQL_SERVER && float_in_braces == true)
+    if(_target != SQL_BIGQUERY && float_in_braces == true)
     {
         Token::ChangeNoFormat(name, name, 1, name->len - 2);
         conv = true;
     }
+    else
+    // BigQuery
+    if(_target == SQL_BIGQUERY && _source != SQL_BIGQUERY && open == NULL)
+        Token::Change(name, "FLOAT64", L"FLOAT64", 7);
 
     if(!conv)
         TOKEN_NO_CONV_REQ(name)
@@ -2511,7 +2534,7 @@ bool SqlParser::ParseFloat4Type(Token *name)
     }
     else
         // Convert to FLOAT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "FLOAT", L"FLOAT", 5);
 
     DTYPE_DTL_STATS_L(name)
@@ -2550,7 +2573,7 @@ bool SqlParser::ParseFloat8Type(Token *name)
         Token::Change(name, "BINARY_DOUBLE", L"BINARY_DOUBLE", 13);
     else
         // Convert to FLOAT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "FLOAT", L"FLOAT", 5);
 
     DTYPE_DTL_STATS_L(name)
@@ -2579,7 +2602,7 @@ bool SqlParser::ParseGraphicType(Token *name)
     }
 
     // Convert to NCHAR in Oracle, SQL Server
-    if(Target(SQL_ORACLE, SQL_SQL_SERVER) == true)
+    if(Target(SQL_ORACLE, SQL_BIGQUERY) == true)
         Token::Change(name, "NCHAR", L"NCHAR", 5);
     else
         // Convert to CHAR in PostgreSQL
@@ -2620,7 +2643,7 @@ bool SqlParser::ParseImageType(Token *name)
         Token::Change(name, "BLOB", L"BLOB", 4);
     else
         // Convert to VARBINARY(max) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Change(name, "VARBINARY", L"VARBINARY", 9);
             AppendNoFormat(name, "(max)", L"(max)", 5);
@@ -2635,7 +2658,7 @@ bool SqlParser::ParseImageType(Token *name)
                     Token::Change(name, "BYTEA", L"BYTEA", 5);
                 else
                     // Remove [] for other databases
-                    if(_target != SQL_SQL_SERVER && image_in_braces == true)
+                    if(_target != SQL_BIGQUERY && image_in_braces == true)
                         Token::ChangeNoFormat(name, name, 1, name->len - 2);
                     else
                         // Remove "" for other databases
@@ -2754,7 +2777,7 @@ bool SqlParser::ParseIntervalType(Token *name)
         if(start == false)
             Append(name, " DAY(5) TO SECOND", L" DAY(5) TO SECOND", 17);
         else
-        // When second unit is not specified (for PostgreSQL) 
+        // When second unit is not specified (for PostgreSQL)
         // or first unit is equal to second unit (for Informix) convert to NUMBER(5) in Oracle
         if(to == NULL || Token::Compare(first_unit, second_unit) == true)
         {
@@ -2763,7 +2786,7 @@ bool SqlParser::ParseIntervalType(Token *name)
             Token::Change(first_unit, "NUMBER", L"NUMBER", 6);
 
             if(open == NULL)
-            {		
+            {
                 if(open2 != NULL)
                     Prepend(scale, "5,", L"5,", 2);
                 else
@@ -2785,11 +2808,11 @@ bool SqlParser::ParseIntervalType(Token *name)
     }
     else
     // Convert to VARHCAR(30) in SQL Server, MySQL
-    if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+    if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
     {
         Token::Remove(first_unit, second_unit);
         Token::Remove(open2, close2);
-        Token::Change(name, "VARCHAR(30)", L"VARCHAR(30)", 11);
+        Token::Change(name, "STRING", L"STRING", 6);
         TOKEN_WARN(name, TOKEN_WARN_APP_CHANGES);
     }
     else
@@ -2806,7 +2829,7 @@ bool SqlParser::ParseIntervalType(Token *name)
             Token::Compare(second_unit, "FRACTION", L"FRACTION", 8) == true))
             Token::Remove(to, second_unit);
 
-        // Change FRACTION in Informix to SECOND in PostgreSQL 
+        // Change FRACTION in Informix to SECOND in PostgreSQL
         if(Token::Compare(first_unit, "FRACTION", L"FRACTION", 8) == true)
             Token::Change(first_unit, "SECOND", L"SECOND", 6);
         else
@@ -2892,10 +2915,14 @@ bool SqlParser::ParseIntType(Token *name, int clause_scope)
     }
     // Remove [] for other databases
     else
-    if(_target != SQL_SQL_SERVER && int_in_braces == true)
+    if(_target != SQL_BIGQUERY && int_in_braces == true)
     {
         Token::ChangeNoFormat(name, name, 1, name->len - 2);
         conv = true;
+    }
+    if(_target == SQL_BIGQUERY && _source != SQL_BIGQUERY)
+    {
+        Token::Change(name, "INT64", L"INT64", 5);
     }
 
     if(!conv)
@@ -2935,7 +2962,7 @@ bool SqlParser::ParseInt1Type(Token *name)
         Token::Change(name, "NUMBER(3)", L"NUMBER(3)", 9);
     else
         // Convert to SMALLINT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "SMALLINT", L"SMALLINT", 8);
 
     DTYPE_DTL_STATS_L(name)
@@ -2972,7 +2999,7 @@ bool SqlParser::ParseInt2Type(Token *name)
         Token::Change(name, "NUMBER(5)", L"NUMBER(5)", 9);
     else
         // Convert to SMALLINT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "SMALLINT", L"SMALLINT", 8);
 
     DTYPE_DTL_STATS_L(name)
@@ -3009,7 +3036,7 @@ bool SqlParser::ParseInt3Type(Token *name)
         Token::Change(name, "NUMBER(7)", L"NUMBER(7)", 9);
     else
         // Convert to INT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "INT", L"INT", 3);
 
     DTYPE_DTL_STATS_L(name)
@@ -3046,7 +3073,7 @@ bool SqlParser::ParseInt4Type(Token *name)
         Token::Change(name, "NUMBER(10)", L"NUMBER(10)", 10);
     else
         // Convert to INT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "INT", L"INT", 3);
 
     DTYPE_DTL_STATS_L(name)
@@ -3083,7 +3110,7 @@ bool SqlParser::ParseInt8Type(Token *name)
         Token::Change(name, "NUMBER(19)", L"NUMBER(19)", 10);
     else
         // Convert to BIGINT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "BIGINT", L"BIGINT", 6);
 
     DTYPE_DTL_STATS_L(name)
@@ -3171,7 +3198,7 @@ bool SqlParser::ParseLongType(Token *name)
         PushBack(unit);
         unit = NULL;
     }
-    
+
     // LONG in Oracle
                             if(unit == NULL)
                             {
@@ -3180,7 +3207,7 @@ bool SqlParser::ParseLongType(Token *name)
                                     Token::Change(name, "CLOB", L"CLOB", 4);
                                 else
                                     // Convert to VARCHAR(max) in SQL Server
-                                    if(_target == SQL_SQL_SERVER)
+                                    if(_target == SQL_BIGQUERY)
                                     {
                                         Token::Change(name, "VARCHAR", L"VARCHAR", 7);
                                         AppendNoFormat(name, "(max)", L"(max)", 5);
@@ -3206,7 +3233,7 @@ bool SqlParser::ParseLongType(Token *name)
                                     }
                                     else
                                         // Convert to VARCHAR(max) in SQL Server
-                                        if(_target == SQL_SQL_SERVER)
+                                        if(_target == SQL_BIGQUERY)
                                         {
                                             Token::Remove(name);
                                             Token::Change(unit, "VARBINARY", L"VARBINARY", 9);
@@ -3232,7 +3259,7 @@ bool SqlParser::ParseLongType(Token *name)
                                         }
                                         else
                                             // Convert to VARBINARY(max) in SQL Server
-                                            if(_target == SQL_SQL_SERVER)
+                                            if(_target == SQL_BIGQUERY)
                                             {
                                                 Token::Remove(name, unit);
                                                 Token::Change(varying, "VARBINARY", L"VARBINARY", 9);
@@ -3258,7 +3285,7 @@ bool SqlParser::ParseLongType(Token *name)
                                             }
                                             else
                                                 // Convert to NVARCHAR(max) in SQL Server
-                                                if(_target == SQL_SQL_SERVER)
+                                                if(_target == SQL_BIGQUERY)
                                                 {
                                                     Token::Remove(name);
                                                     Token::Change(unit, "NVARCHAR", L"NVARCHAR", 8);
@@ -3277,7 +3304,7 @@ bool SqlParser::ParseLongType(Token *name)
                                             if(raw != NULL)
                                             {
                                                 // Convert to VARBINARY(max) in SQL Server
-                                                if(_target == SQL_SQL_SERVER)
+                                                if(_target == SQL_BIGQUERY)
                                                 {
                                                     Token::Remove(name);
                                                     Token::Change(unit, "VARBINARY", L"VARBINARY", 9);
@@ -3310,7 +3337,7 @@ bool SqlParser::ParseLongType(Token *name)
                                                     }
                                                     else
                                                         // Convert to VARBINARY(max) in SQL Server
-                                                        if(_target == SQL_SQL_SERVER)
+                                                        if(_target == SQL_BIGQUERY)
                                                         {
                                                             Token::Remove(name);
                                                             Token::Change(unit, "VARBINARY", L"VARBINARY", 9);
@@ -3329,7 +3356,7 @@ bool SqlParser::ParseLongType(Token *name)
                                                         }
                                                         else
                                                             // Convert to VARBINARY(max) in SQL Server
-                                                            if(_target == SQL_SQL_SERVER)
+                                                            if(_target == SQL_BIGQUERY)
                                                             {
                                                                 Token::Remove(name);
                                                                 Token::Change(unit, "VARBINARY", L"VARBINARY", 9);
@@ -3355,7 +3382,7 @@ bool SqlParser::ParseLongType(Token *name)
                                                             }
                                                             else
                                                                 // Convert to VARCHAR(max) in SQL Server
-                                                                if(_target == SQL_SQL_SERVER)
+                                                                if(_target == SQL_BIGQUERY)
                                                                 {
                                                                     Token::Remove(name);
                                                                     Token::Change(unit, "VARCHAR", L"VARCHAR", 7);
@@ -3389,12 +3416,12 @@ bool SqlParser::ParseLongblobType(Token *name)
         Token::Change(name, "BLOB", L"BLOB", 4);
     else
         // Convert to VARBINARY(max) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Change(name, "VARBINARY", L"VARBINARY", 9);
             AppendNoFormat(name, "(max)", L"(max)", 5);
         }
-                
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -3460,12 +3487,12 @@ bool SqlParser::ParseMediumblobType(Token *name)
         Token::Change(name, "BLOB", L"BLOB", 4);
     else
         // Convert to VARBIANRY(max) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Change(name, "VARBINARY", L"VARBINARY", 9);
             AppendNoFormat(name, "(max)", L"(max)", 5);
         }
-    
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -3482,7 +3509,7 @@ bool SqlParser::ParseLongtextType(Token *name)
         return false;
 
     // Convert to VARCHAR(max) in SQL Server
-    if(_target == SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY)
     {
         Token::Change(name, "VARCHAR", L"VARCHAR", 7);
         AppendNoFormat(name, "(max)", L"(max)", 5);
@@ -3495,7 +3522,7 @@ bool SqlParser::ParseLongtextType(Token *name)
             // Convert to LONGTEXT in MySQL
             if(_source != SQL_MYSQL && Target(SQL_MARIADB, SQL_MYSQL))
                 Token::Change(name, "LONGTEXT", L"LONGTEXT", 8);
-    
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -3531,7 +3558,7 @@ bool SqlParser::ParseMediumintType(Token *name)
         Token::Change(name, "NUMBER(7)", L"NUMBER(7)", 9);
     else
         // Convert to INT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "INT", L"INT", 3);
 
     DTYPE_DTL_STATS_L(name)
@@ -3549,7 +3576,7 @@ bool SqlParser::ParseMediumtextType(Token *name)
         return false;
 
     // Convert to VARCHAR(max) in SQL Server
-    if(_target == SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY)
     {
         Token::Change(name, "VARCHAR", L"VARCHAR", 7);
         AppendNoFormat(name, "(max)", L"(max)", 5);
@@ -3562,7 +3589,7 @@ bool SqlParser::ParseMediumtextType(Token *name)
             // Convert to LONGTEXT in MySQL
             if(_source != SQL_MYSQL && Target(SQL_MARIADB, SQL_MYSQL))
                 Token::Change(name, "LONGTEXT", L"LONGTEXT", 8);
-        
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -3598,7 +3625,7 @@ bool SqlParser::ParseMiddleintType(Token *name)
         Token::Change(name, "NUMBER(7)", L"NUMBER(7)", 9);
     else
         // Convert to INT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "INT", L"INT", 3);
 
     DTYPE_DTL_STATS_L(name)
@@ -3673,7 +3700,7 @@ bool SqlParser::ParseMoneyType(Token *name)
                         Append(name, "(19,4)", L"(19,4)", 6);
     }
     else
-        if(Target(SQL_SQL_SERVER, SQL_POSTGRESQL) == true)
+        if(Target(SQL_BIGQUERY, SQL_POSTGRESQL) == true)
         {
             // Remove ""
             if(money_in_quotes == true)
@@ -3689,12 +3716,12 @@ bool SqlParser::ParseMoneyType(Token *name)
                 Token::Change(name, "DECIMAL", L"DECIMAL", 7);
 
                 // Range (15,4) is allowed in SQL Server
-                if(_source == SQL_SQL_SERVER)
+                if(_source == SQL_BIGQUERY)
                     Append(name, "(15,4)", L"(15,4)", 6);
             }
             else
                 // Remove [] for other databases
-                if(_target != SQL_SQL_SERVER && money_in_braces == true)
+                if(_target != SQL_BIGQUERY && money_in_braces == true)
                     Token::ChangeNoFormat(name, name, 1, name->len - 2);
                 else
                     // Remove "" for other databases
@@ -3769,7 +3796,7 @@ bool SqlParser::ParseNationalType(Token *name)
             }
             else
                 // Convert to NVARCHAR(max) is SQL Server
-                if(_target == SQL_SQL_SERVER)
+                if(_target == SQL_BIGQUERY)
                 {
                     Token::Remove(name);
                     Token::Change(unit, "NVARCHAR", L"NVARCHAR", 8);
@@ -3810,7 +3837,7 @@ bool SqlParser::ParseNationalType(Token *name)
                     if(open == NULL)
                     {
                         // Size is 1 by default in SQL Server, Informix, Sybase ASE, Sybase ASA
-                        if(Source(SQL_SQL_SERVER, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
+                        if(Source(SQL_BIGQUERY, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
                             Append(varying, "(1)", L"(1)", 3);
                     }
                 }
@@ -3826,7 +3853,7 @@ bool SqlParser::ParseNationalType(Token *name)
                     }
                     else
                         // Size is mandatory in MySQL
-                        if(Target(SQL_MARIADB, SQL_MYSQL) && open == NULL)		
+                        if(Target(SQL_MARIADB, SQL_MYSQL) && open == NULL)
                             Append(varying, "(1)", L"(1)", 3);
         }
         else
@@ -3864,7 +3891,7 @@ bool SqlParser::ParseNationalType(Token *name)
                     }
                     else
                         // Convert to NVARCHAR in SQL Server
-                        if(_target == SQL_SQL_SERVER)
+                        if(_target == SQL_BIGQUERY)
                         {
                             Token::Remove(name);
                             Token::Change(unit, "NVARCHAR", L"NVARCHAR", 8);
@@ -3947,7 +3974,7 @@ bool SqlParser::ParseNcharType(Token *name)
                 if(open == NULL)
                 {
                     // Size is 1 by default in SQL Server, Informix, Sybase ASE, Sybase ASA
-                    if(Source(SQL_SQL_SERVER, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
+                    if(Source(SQL_BIGQUERY, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
                         Append(varying, "(1)", L"(1)", 3);
                 }
             }
@@ -3964,12 +3991,12 @@ bool SqlParser::ParseNcharType(Token *name)
                 }
                 else
                     // Size is mandatory in MySQL
-                    if(Target(SQL_MARIADB, SQL_MYSQL) && open == NULL)		
+                    if(Target(SQL_MARIADB, SQL_MYSQL) && open == NULL)
                         Append(varying, "(1)", L"(1)", 3);
         }
         else
             // Check for NCHAR
-            if(varying == NULL && _target != SQL_SQL_SERVER)
+            if(varying == NULL && _target != SQL_BIGQUERY)
             {
                 // Remove []
                 if(nchar_in_braces == true)
@@ -3993,7 +4020,7 @@ bool SqlParser::ParseNcharType(Token *name)
             }
             else
                 // Remove [] for other databases
-                if(_target != SQL_SQL_SERVER && nchar_in_braces == true)
+                if(_target != SQL_BIGQUERY && nchar_in_braces == true)
                     Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_DTL_STATS_L(name)
@@ -4037,7 +4064,7 @@ bool SqlParser::ParseNclobType(Token *name)
     }
 
     // Convert to NVARCHAR(max) in SQL Server
-    if(_target == SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY)
     {
         Token::Change(name, "NVARCHAR", L"NVARCHAR", 8);
         AppendNoFormat(name, "(max)", L"(max)", 5);
@@ -4080,7 +4107,7 @@ bool SqlParser::ParseNtextType(Token *name)
         Token::Change(name, "NCLOB", L"NCLOB", 5);
     else
         // Convert to NVARCHAR(max) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Change(name, "NVARCHAR", L"NVARCHAR", 8);
             AppendNoFormat(name, "(max)", L"(max)", 5);
@@ -4094,12 +4121,12 @@ bool SqlParser::ParseNtextType(Token *name)
                 Token::Change(name, "TEXT", L"TEXT", 4);
             else
                 // Remove [] for other database
-                if(_target != SQL_SQL_SERVER && ntext_in_braces == true)
+                if(_target != SQL_BIGQUERY && ntext_in_braces == true)
                     Token::ChangeNoFormat(name, name, 1, name->len - 2);
-            
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
-    
+
     return true;
 }
 
@@ -4129,7 +4156,7 @@ bool SqlParser::ParseNumberType(Token *name, int clause_scope)
         comma = GetNextCharToken(',', L',');
 
         if(comma != NULL)
-            scale = GetNextNumberToken(); 
+            scale = GetNextNumberToken();
 
         close = GetNextCharToken(')', L')');
     }
@@ -4141,7 +4168,7 @@ bool SqlParser::ParseNumberType(Token *name, int clause_scope)
         if(clause_scope == SQL_SCOPE_FUNC_PARAMS || clause_scope == SQL_SCOPE_PROC_PARAMS ||
             clause_scope == SQL_SCOPE_VAR_DECL)
         {
-            if(_target == SQL_SQL_SERVER)
+            if(_target == SQL_BIGQUERY)
                 Token::Change(name, "FLOAT", L"FLOAT", 5);
             else
                 if(Target(SQL_MARIADB, SQL_MYSQL))
@@ -4151,7 +4178,7 @@ bool SqlParser::ParseNumberType(Token *name, int clause_scope)
         }
         else
             // Convert to FLOAT in SQL Server
-            if(_target == SQL_SQL_SERVER)
+            if(_target == SQL_BIGQUERY)
             {
                 Token::Change(name, "FLOAT", L"FLOAT", 5);
 
@@ -4202,7 +4229,7 @@ bool SqlParser::ParseNumberType(Token *name, int clause_scope)
             if(prec != -1 && prec < 3 && sc == 0)
             {
                 // SQL Server TINYINT is 0 to 255, PostgreSQL does not support TINYINT
-                if(Target(SQL_SQL_SERVER, SQL_POSTGRESQL, SQL_GREENPLUM))
+                if(Target(SQL_BIGQUERY, SQL_POSTGRESQL, SQL_GREENPLUM))
                     Token::Change(name, "SMALLINT", L"SMALLINT", 8);
                 else
                     Token::Change(name, "TINYINT", L"TINYINT", 7);
@@ -4307,7 +4334,7 @@ bool SqlParser::ParseNumericType(Token *name)
             Append(name, "(38,0)", L"(38,0)", 6);
         else
             // NUMERIC(18,0) is default in SQL Server and Sybase ASE
-            if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true && Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+            if(Source(SQL_BIGQUERY, SQL_SYBASE) == true && Target(SQL_BIGQUERY, SQL_SYBASE) == false)
                 Append(name, "(18,0)", L"(18,0)", 6);
             else
                 // NUMERIC(5,0) is default in DB2
@@ -4332,7 +4359,7 @@ bool SqlParser::ParseNumericType(Token *name)
         Token::Change(name, "NUMBER", L"NUMBER", 6);
     else
         // Remove [] for other databases
-        if(_target != SQL_SQL_SERVER && numeric_in_braces == true)
+        if(_target != SQL_BIGQUERY && numeric_in_braces == true)
             Token::ChangeNoFormat(name, name, 1, name->len - 2);
         else
             // If target type is not DB2 change NUM to NUMERIC
@@ -4416,7 +4443,7 @@ bool SqlParser::ParseNvarcharType(Token *name)
             if(open == NULL)
             {
                 // Size is 1 by default in SQL Server, Informix, Sybase ASE, Sybase ASA
-                if(Source(SQL_SQL_SERVER, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
+                if(Source(SQL_BIGQUERY, SQL_INFORMIX, SQL_SYBASE, SQL_SYBASE_ASA) == true)
                     Append(name, "(1)", L"(1)", 3);
             }
         }
@@ -4441,7 +4468,7 @@ bool SqlParser::ParseNvarcharType(Token *name)
                 }
                 else
                     // Remove [] for other databases
-                    if(_target != SQL_SQL_SERVER && nvarchar_in_braces == true)
+                    if(_target != SQL_BIGQUERY && nvarchar_in_braces == true)
                         Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     name->data_type = TOKEN_DT_STRING;
@@ -4499,7 +4526,7 @@ bool SqlParser::ParseRawType(Token *name)
     Token *close = GetNextCharToken(')', L')');
 
     // Convert to VARBINARY in SQL Server
-    if(_target == SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY)
         Token::Change(name, "VARBINARY", L"VARBINARY", 9);
     else
         if(Target(SQL_MARIADB, SQL_MYSQL))
@@ -4586,11 +4613,11 @@ bool SqlParser::ParseRealType(Token *name)
         }
         else
             // Convert MySQL REAL to DOUBLE PRECISION in SQL Server
-            if(_source == SQL_MYSQL && _target == SQL_SQL_SERVER)
+            if(_source == SQL_MYSQL && _target == SQL_BIGQUERY)
                 Token::Change(name, "DOUBLE PRECISION", L"DOUBLE PRECISION", 16);
             else
                 // Remove [] for other databases
-                if(_target != SQL_SQL_SERVER && real_in_braces == true)
+                if(_target != SQL_BIGQUERY && real_in_braces == true)
                     Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_DTL_STATS_L(name)
@@ -4611,7 +4638,7 @@ bool SqlParser::ParseRefcursor(Token *name)
     // Netezza does not support cursors
     if(_target == SQL_NETEZZA)
         Token::Change(name, "RECORD", L"RECORD", 6);
-        
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -4634,7 +4661,7 @@ bool SqlParser::ParseRowidType(Token *name)
         Token::Change(name, "CHAR(10)", L"CHAR(10)", 8);
         TOKEN_WARN(name, TOKEN_WARN_APP_CHANGES);
     }
-        
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -4669,9 +4696,9 @@ bool SqlParser::ParseRowversionType(Token *name)
             Token::Change(name, "BYTEA", L"BYTEA", 5);
         else
             // Remove [] for other databases
-            if(_target != SQL_SQL_SERVER && rowversion_in_braces == true)
+            if(_target != SQL_BIGQUERY && rowversion_in_braces == true)
                 Token::ChangeNoFormat(name, name, 1, name->len - 2);
-    
+
     DTYPE_STATS(name)
     DTYPE_DTL_STATS_0(name)
 
@@ -4712,7 +4739,7 @@ bool SqlParser::ParseSerialType(Token *name)
     }
     else
         // Convert to INT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             if(_source == SQL_MYSQL)
                 Token::Change(name, "NUMERIC(20)", L"NUMERIC(20)", 11);
@@ -4790,7 +4817,7 @@ bool SqlParser::ParseSerial8Type(Token *name)
         Token::Change(name, "NUMBER(19)", L"NUMBER(19)", 10);
     else
         // Convert to BIGINT in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "BIGINT", L"BIGINT", 6);
 
     DTYPE_STATS(name)
@@ -4829,12 +4856,12 @@ bool SqlParser::ParseSmalldatetimeType(Token *name)
         Token::Change(name, "TIMESTAMP", L"TIMESTAMP", 9);
 
         // Fraction is 0 in SQL Server, Sybase ASE
-        if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true)
+        if(Source(SQL_BIGQUERY, SQL_SYBASE) == true)
             Append(name, "(0)", L"(0)", 3);
     }
     else
         // Convert Sybase ASA SMALLDATETIME to DATETIME(6) in SQL Server
-        if(_target == SQL_SQL_SERVER && _source == SQL_SYBASE_ASA)
+        if(_target == SQL_BIGQUERY && _source == SQL_SYBASE_ASA)
             Token::Change(name, "DATETIME2(6)", L"DATETIME2(6)", 12);
         else
             // Convert to DATETIME in MySQL
@@ -4844,7 +4871,7 @@ bool SqlParser::ParseSmalldatetimeType(Token *name)
             }
             else
                 // Remove [] for other databases
-                if(_target != SQL_SQL_SERVER && smalldatetime_in_braces == true)
+                if(_target != SQL_BIGQUERY && smalldatetime_in_braces == true)
                     Token::ChangeNoFormat(name, name, 1, name->len - 2);
                 else
                     // Remove "" for other databases
@@ -4934,8 +4961,11 @@ bool SqlParser::ParseSmallintType(Token *name, int clause_scope)
             Token::Change(name, "DECIMAL(38)", L"DECIMAL(38)", 11);
         else
             // Remove [] for other databases
-            if(_target != SQL_SQL_SERVER && smallint_in_braces == true)
+            if(_target != SQL_BIGQUERY && smallint_in_braces == true)
                 Token::ChangeNoFormat(name, name, 1, name->len - 2);
+            else
+               if(_target == SQL_BIGQUERY && _source != SQL_BIGQUERY)
+                  Token::Change(name, "INT64", L"INT64", 5);
 
     DTYPE_DTL_STATS_L(name)
 
@@ -4979,7 +5009,7 @@ bool SqlParser::ParseSmallmoneyType(Token *name)
         if(Target(SQL_MARIADB, SQL_MYSQL))
         {
             // SQL Server SMALLMONEY implemented as DECIMAL(6,4)
-            if(_source == SQL_SQL_SERVER)
+            if(_source == SQL_BIGQUERY)
                 Token::Change(name, "DECIMAL(6,4)", L"DECIMAL(6,4)", 12);
             else
                 Token::Change(name, "DECIMAL", L"DECIMAL", 7);
@@ -4990,7 +5020,7 @@ bool SqlParser::ParseSmallmoneyType(Token *name)
                 Token::Change(name, "MONEY", L"MONEY", 5);
             else
                 // Remove [] for other databases
-                if(_target != SQL_SQL_SERVER && smallmoney_in_braces == true)
+                if(_target != SQL_BIGQUERY && smallmoney_in_braces == true)
                     Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_STATS(name)
@@ -5075,10 +5105,10 @@ bool SqlParser::ParseTextType(Token *name)
         Token::Change(name, "CLOB", L"CLOB", 4);
     else
         // Convert to VARCHAR(max) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
-            Token::Change(name, "VARCHAR", L"VARCHAR", 7);
-            AppendNoFormat(name, "(max)", L"(max)", 5);
+            Token::Change(name, "STRING", L"STRING", 6);
+//            AppendNoFormat(name, "(max)", L"(max)", 5);
         }
         else
             // Convert to LONGTEXT in MySQL
@@ -5086,7 +5116,7 @@ bool SqlParser::ParseTextType(Token *name)
                 Token::Change(name, "LONGTEXT", L"LONGTEXT", 8);
             else
                 // Remove [] for other databases
-                if(_target != SQL_SQL_SERVER && text_in_braces == true)
+                if(_target != SQL_BIGQUERY && text_in_braces == true)
                     Token::ChangeNoFormat(name, name, 1, name->len - 2);
                 else
                     // Remove "" for other databases
@@ -5160,7 +5190,7 @@ bool SqlParser::ParseTimeType(Token *name)
         Token::Change(name, "TIMESTAMP", L"TIMESTAMP", 9);
     else
         // Append fraction in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             // Fraction is 6 in Sybase ASE, Sybase ASA
             if(Source(SQL_SYBASE, SQL_SYBASE_ASA) == true)
@@ -5177,7 +5207,7 @@ bool SqlParser::ParseTimeType(Token *name)
                 if(open == NULL)
                 {
                     // Fraction is 7 by default in SQL Server, but max fraction is 6 in MySQL
-                    if(_source == SQL_SQL_SERVER)
+                    if(_source == SQL_BIGQUERY)
                         Append(name, "(6)", L"(6)", 3);
                 }
                 else
@@ -5191,7 +5221,7 @@ bool SqlParser::ParseTimeType(Token *name)
                     if(open == NULL)
                     {
                         // Fraction is 7 by default in SQL Server, but max fraction is 6 in MySQL
-                        if(_source == SQL_SQL_SERVER)
+                        if(_source == SQL_BIGQUERY)
                             Append(name, "(6)", L"(6)", 3);
                     }
                     else
@@ -5200,7 +5230,7 @@ bool SqlParser::ParseTimeType(Token *name)
                 }
                 else
                     // Remove [] for other databases
-                    if(_target != SQL_SQL_SERVER && time_in_braces == true)
+                    if(_target != SQL_BIGQUERY && time_in_braces == true)
                         Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_DTL_STATS_L(name)
@@ -5323,7 +5353,7 @@ bool SqlParser::ParseTimestampType(Token *name)
     }
 
     // Convert to DATETIME2 in SQL Server
-    if(_target == SQL_SQL_SERVER && _source != SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY && _source != SQL_BIGQUERY)
     {
         if(with != NULL)
         {
@@ -5333,7 +5363,7 @@ bool SqlParser::ParseTimestampType(Token *name)
         }
         else
         {
-            Token::Change(name, "DATETIME2", L"DATETIME2", 9);
+            Token::Change(name, "TIMESTAMP", L"TIMESTAMP", 9);
             conv = true;
         }
 
@@ -5355,7 +5385,7 @@ bool SqlParser::ParseTimestampType(Token *name)
     // Convert to DATETIME in MySQL
     if(Target(SQL_MARIADB, SQL_MYSQL) && _source != SQL_MYSQL)
     {
-        if(_source == SQL_SQL_SERVER)
+        if(_source == SQL_BIGQUERY)
             Token::Change(name, "BINARY(8)", L"BINARY(8)", 9);
         else
             Token::Change(name, "DATETIME", L"DATETIME", 8);
@@ -5373,7 +5403,7 @@ bool SqlParser::ParseTimestampType(Token *name)
     if(_target == SQL_POSTGRESQL)
     {
         // Convert SQL Server TIMESTAMP to BYTEA in PostgreSQL
-        if(_source == SQL_SQL_SERVER)
+        if(_source == SQL_BIGQUERY)
         {
             Token::Change(name, "BYTEA", L"BYTEA", 5);
             conv = true;
@@ -5388,7 +5418,7 @@ bool SqlParser::ParseTimestampType(Token *name)
     }
     else
     // Remove [] for other database
-    if(_target != SQL_SQL_SERVER && timestamp_in_braces == true)
+    if(_target != SQL_BIGQUERY && timestamp_in_braces == true)
         Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     if(!conv)
@@ -5432,6 +5462,9 @@ bool SqlParser::ParseTimestamptzType(Token *name)
             Token::Change(name, "TIMESTAMP WITH TIME ZONE", L"TIMESTAMP WITH TIME ZONE", 24);
     }
 
+    if(_target == SQL_BIGQUERY)
+        Token::Change(name, "TIMESTAMP", L"TIMESTAMP", 9);
+
     DTYPE_DTL_STATS_L(name)
 
     return true;
@@ -5451,7 +5484,7 @@ bool SqlParser::ParseTinyblobType(Token *name)
         Token::Change(name, "RAW(255)", L"RAW(255)", 8);
     else
         // Convert to VARBINARY(255) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "VARBINARY(255)", L"VARBINARY(255)", 14);
 
     DTYPE_STATS(name)
@@ -5510,11 +5543,11 @@ bool SqlParser::ParseTinyintType(Token *name, int clause_scope)
     }
     else
     // Convert MySQL TINYINT to SMALLINT in SQL Server
-    if(_source == SQL_MYSQL && _target == SQL_SQL_SERVER)
+    if(_source == SQL_MYSQL && _target == SQL_BIGQUERY)
         Token::Change(name, "SMALLINT", L"SMALLINT", 8);
     else
     // SQL Server's TINYINT is unsigned
-    if(_source == SQL_SQL_SERVER && Target(SQL_MARIADB, SQL_MYSQL))
+    if(_source == SQL_BIGQUERY && Target(SQL_MARIADB, SQL_MYSQL))
     {
         // Remove []
         if(tinyint_in_braces == true)
@@ -5528,7 +5561,7 @@ bool SqlParser::ParseTinyintType(Token *name, int clause_scope)
         Token::Change(name, "SMALLINT", L"SMALLINT", 8);
     else
     // Remove [] for other databases
-    if(_target != SQL_SQL_SERVER && tinyint_in_braces == true)
+    if(_target != SQL_BIGQUERY && tinyint_in_braces == true)
         Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_DTL_STATS_L(name)
@@ -5550,7 +5583,7 @@ bool SqlParser::ParseTinytextType(Token *name)
         Token::Change(name, "VARCHAR2(255)", L"VARCHAR2(255)", 13);
     else
         // Convert to VARCHAR(255) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "VARCHAR(255)", L"VARCHAR(255)", 12);
 
     DTYPE_STATS(name)
@@ -5607,7 +5640,7 @@ bool SqlParser::ParseUnicodeType(Token *name)
         }
         else
             // Convert to NATIONAL CHARACTER VARYING and NATIONAL CHAR VARYING in SQL Server
-            if(_target == SQL_SQL_SERVER)
+            if(_target == SQL_BIGQUERY)
                 Token::Change(name, "NATIONAL", L"NATIONAL", 8);
             else
                 // Convert to CHARACTER VARYING and CHAR VARYING in PostgreSQL
@@ -5624,7 +5657,7 @@ bool SqlParser::ParseUnicodeType(Token *name)
         // Check for UNICODE CHARACTER, UNICODE CHAR
     {
         // Convert to NATIONAL CHARACTER and NATIONAL CHAR in Oracle, SQL Server
-        if(Target(SQL_ORACLE, SQL_SQL_SERVER) == true)
+        if(Target(SQL_ORACLE, SQL_BIGQUERY) == true)
             Token::Change(name, "NATIONAL", L"NATIONAL", 8);
         else
             // Convert to CHARACTER and CHAR in PostgreSQL
@@ -5658,7 +5691,7 @@ bool SqlParser::ParseUnicharType(Token *name)
     }
 
     // Convert to NCHAR in Oracle, SQL Server
-    if(Target(SQL_ORACLE, SQL_SQL_SERVER) == true)
+    if(Target(SQL_ORACLE, SQL_BIGQUERY) == true)
         Token::Change(name, "NCHAR", L"NCHAR", 5);
     else
         // Convert to CHAR in PostgreSQL
@@ -5696,7 +5729,7 @@ bool SqlParser::ParseUniqueidentifierType(Token *name)
         Token::Change(name, "CHAR(36)", L"CHAR(16)", 8);
     else
         // Remove [] for other databases
-        if(_target != SQL_SQL_SERVER && in_braces == true)
+        if(_target != SQL_BIGQUERY && in_braces == true)
             Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_STATS(name)
@@ -5715,7 +5748,7 @@ bool SqlParser::ParseUniqueidentifierstrType(Token *name)
         return false;
 
     // Convert to CHAR(36) in Oracle, SQL Server
-    if(Target(SQL_ORACLE, SQL_SQL_SERVER) == true)
+    if(Target(SQL_ORACLE, SQL_BIGQUERY) == true)
         Token::Change(name, "CHAR(36)", L"CHAR(36)", 8);
     else
         // Convert to UUID in PostgreSQL
@@ -5742,7 +5775,7 @@ bool SqlParser::ParseUnitextType(Token *name)
         Token::Change(name, "NCLOB", L"NCLOB", 5);
     else
         // Convert to NVARCHAR(max) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Change(name, "NVARCHAR", L"NVARCHAR", 8);
             AppendNoFormat(name, "(max)", L"(max)", 5);
@@ -5789,7 +5822,7 @@ bool SqlParser::ParseUnivarcharType(Token *name)
     }
     else
         // Convert to NVARCHAR in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "NVARCHAR", L"NVARCHAR", 8);
         else
             // Convert to VARCHAR in PostgreSQL
@@ -5848,7 +5881,7 @@ bool SqlParser::ParseUnsignedType(Token *name)
         }
         else
             // Convert UNSIGNED BIGINT to NUMERIC(20) in SQL Server, PostgreSQL
-            if(Target(SQL_SQL_SERVER, SQL_POSTGRESQL) == true)
+            if(Target(SQL_BIGQUERY, SQL_POSTGRESQL) == true)
             {
                 Token::Remove(name);
                 Token::Change(unit, "NUMERIC(20)", L"NUMERIC(20)", 11);
@@ -5866,7 +5899,7 @@ bool SqlParser::ParseUnsignedType(Token *name)
             }
             else
                 // Convert UNSIGNED INT to NUMERIC(10) in SQL Server, PostgreSQL
-                if(Target(SQL_SQL_SERVER, SQL_POSTGRESQL) == true)
+                if(Target(SQL_BIGQUERY, SQL_POSTGRESQL) == true)
                 {
                     Token::Remove(name);
                     Token::Change(unit, "NUMERIC(10)", L"NUMERIC(10)", 11);
@@ -5884,7 +5917,7 @@ bool SqlParser::ParseUnsignedType(Token *name)
                 }
                 else
                     // Convert UNSIGNED SMALLINT to NUMERIC(5) in SQL Server, PostgreSQL
-                    if(Target(SQL_SQL_SERVER, SQL_POSTGRESQL) == true)
+                    if(Target(SQL_BIGQUERY, SQL_POSTGRESQL) == true)
                     {
                         Token::Remove(name);
                         Token::Change(unit, "NUMERIC(5)", L"NUMERIC(5)", 10);
@@ -5901,7 +5934,7 @@ bool SqlParser::ParseUnsignedType(Token *name)
                     }
                     else
                         // SQL Server's TINYINT is unsigned
-                        if(_target == SQL_SQL_SERVER)
+                        if(_target == SQL_BIGQUERY)
                             Token::Remove(name);
                         else
                             // Convert UNSIGNED TINYINT to NUMERIC(3) in PostgreSQL
@@ -6052,7 +6085,7 @@ bool SqlParser::ParseVarbinaryType(Token *name)
                 }
                 else
                     // Remove [] for other databases
-                    if(_target != SQL_SQL_SERVER && varbinary_in_braces == true)
+                    if(_target != SQL_BIGQUERY && varbinary_in_braces == true)
                         Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_DTL_STATS_L(name)
@@ -6116,7 +6149,7 @@ bool SqlParser::ParseVarbitType(Token *name)
     }
     else
         // Convert to BINARY in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
         {
             Token::Change(name, "BINARY", L"BINARY", 6);
 
@@ -6160,6 +6193,12 @@ bool SqlParser::ParseVarcharType(Token *name, int clause_scope)
     Token *semantics = NULL;
 
     Token *close = NULL;
+
+    if(_target == SQL_BIGQUERY && varchar)
+    {
+        Token::Change(name, "STRING", L"STRING", 6);
+        return true;
+    }
 
     // Size is optional for SQL Server, PostgreSQL, Informix, Sybase ASE, Sybase ASA
     if(open != NULL)
@@ -6271,7 +6310,7 @@ bool SqlParser::ParseVarcharType(Token *name, int clause_scope)
         }
         else
         // Convert DB2 VARCHAR FOR BIT DATA to VARBINARY in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "VARBINARY", L"VARBINARY", 9);
         else
         // Convert DB2 VARCHAR FOR BIT DATA to BYTEA in PostgreSQL, Greenplum
@@ -6308,7 +6347,7 @@ bool SqlParser::ParseVarcharType(Token *name, int clause_scope)
     {
         if(varchar_in_braces == true)
             Token::ChangeNoFormat(name, name, 1, name->len - 2);
-        
+
         // When used in parameter list for a function or procedure add length
         if(_source == SQL_ORACLE && (clause_scope == SQL_SCOPE_FUNC_PARAMS || clause_scope == SQL_SCOPE_PROC_PARAMS))
             AppendNoFormat(name, "(4000)", L"(4000)", 6);
@@ -6324,7 +6363,7 @@ bool SqlParser::ParseVarcharType(Token *name, int clause_scope)
     }
     else
     // Remove [] for other databases
-    if(_target != SQL_SQL_SERVER && varchar_in_braces == true)
+    if(_target != SQL_BIGQUERY && varchar_in_braces == true)
         Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     name->data_type = TOKEN_DT_STRING;
@@ -6420,7 +6459,7 @@ bool SqlParser::ParseVargraphicType(Token *name)
         Token::Change(name, "NVARCHAR2", L"NVARCHAR2", 9);
     else
         // Convert to NVARCHAR in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "NVARCHAR", L"NVARCHAR", 8);
         else
             // Convert to VARCHAR in PostgreSQL
@@ -6460,7 +6499,7 @@ bool SqlParser::ParseXmlType(Token *name)
             Token::Change(name, "LONGTEXT", L"LONGTEXT", 8);
         else
             // Remove [] for other database
-            if(_target != SQL_SQL_SERVER && xml_in_braces == true)
+            if(_target != SQL_BIGQUERY && xml_in_braces == true)
                 Token::ChangeNoFormat(name, name, 1, name->len - 2);
 
     DTYPE_STATS(name)
@@ -6479,7 +6518,7 @@ bool SqlParser::ParseXmltypeType(Token *name)
         return false;
 
     // Convert to XML in SQL Server, DB2, PostgreSQL, Sybase ASA
-    if(Target(SQL_SQL_SERVER, SQL_DB2, SQL_POSTGRESQL, SQL_SYBASE_ASA) == true)
+    if(Target(SQL_BIGQUERY, SQL_DB2, SQL_POSTGRESQL, SQL_SYBASE_ASA) == true)
         Token::Change(name, "XML", L"XML", 3);
     else
         // Convert to LONGTEXT in MySQL
@@ -6521,7 +6560,7 @@ bool SqlParser::ParseYearType(Token *name)
         Token::Change(name, "NUMBER(4)", L"NUMBER(4)", 9);
     else
         // Convert to NUMERIC(4) in SQL Server
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
             Token::Change(name, "NUMERIC(4)", L"NUMERIC(4)", 10);
 
     DTYPE_DTL_STATS_L(name)

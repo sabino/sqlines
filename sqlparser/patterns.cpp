@@ -25,7 +25,7 @@ bool SqlParser::ParseCreateTriggerOraclePattern(Token *create, Token *table, Tok
 {
 	bool exists = false;
 
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		// If the trigger is before INSERT, check for sequence generation pattern
 		if(when->Compare("BEFORE", L"BEFORE", 6) == true && insert != NULL)
@@ -202,14 +202,14 @@ bool SqlParser::ParseBooleanErrorCheckPattern()
 // Typical cursor check - @@FETCH_STATUS = 0 in SQL Server, @@SQLSTATUS = 0 in Sybase
 bool SqlParser::ParseBooleanCursorCheckPattern()
 {
-	if(!Source(SQL_SQL_SERVER, SQL_SYBASE) || !Target(SQL_ORACLE, SQL_MYSQL, SQL_MARIADB, SQL_POSTGRESQL))
+	if(!Source(SQL_BIGQUERY, SQL_SYBASE) || !Target(SQL_ORACLE, SQL_MYSQL, SQL_MARIADB, SQL_POSTGRESQL))
 		return false;
 
 	bool exists = false;
 
 	// @@FETCH_STATUS = 0 in SQL Server, @@SQLSTATUS = 0 in Sybase ASE
 	// Also check @@SQLSTATUS != 2 that means no rows found in Sybase ASE
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true)
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) == true)
 	{
 		// Optionally enclosed
 		Token *open = GetNext('(', L'(');

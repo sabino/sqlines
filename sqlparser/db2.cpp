@@ -145,7 +145,7 @@ bool SqlParser::ParseDb2GeneratedClause(Token *create, Token *table_name, Token 
 		close = GetNextCharToken(')', L')');
 	
 	// IDENTITY(start, inc) in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(generated, "IDENTITY(", L"IDENTITY(", 9);
 		AppendCopy(generated, start_with);
@@ -1007,7 +1007,7 @@ bool SqlParser::ParseDb2Comment(Token *comment, Token *on, Token *name)
 		// Comment text
 		Token *text = GetNextToken();
 
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Append(text, ", 'table', ", L", 'table', ", 11);
 			AppendCopy(text, name);
@@ -1040,7 +1040,7 @@ bool SqlParser::ParseDb2Comment(Token *comment, Token *on, Token *name)
 
 	Token *close = GetNextCharToken(')', L')');
 
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(comment, "EXECUTE", L"EXECUTE", 7);
 		AppendNoFormat(comment, " sp_addextendedproperty 'Comment',", L" sp_addextendedproperty 'Comment',", 34); 

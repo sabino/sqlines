@@ -58,7 +58,7 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui
 
 INCLUDEPATH += ..\\sqldata\\db_api_headers\\oraclexe_11_2_0\\oci\\include \
-               ..\\sqldata\\db_api_headers\\sql_server\\100\\SDK\\Include \
+               ..\\sqldata\\db_api_headers\\SQL_BIGQUERY\\100\\SDK\\Include \
                ..\\sqldata\\db_api_headers\\mysql57\\include \
                ..\\sqldata\\db_api_headers\\postgresql90\\include \
                ..\\sqldata\\db_api_headers\\sybase15_0\\OCS-15_0\\include \

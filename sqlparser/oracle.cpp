@@ -591,7 +591,7 @@ bool SqlParser::ParseFunctionDbmsOutput(Token *name, Token *open)
 		Token *close = GetNextCharToken(')', L')');
 		
 		// PRINT in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "PRINT", L"PRINT", 5);
 			Token::Change(open, " ", L" ", 1);
@@ -643,7 +643,7 @@ bool SqlParser::ParseOracleVariableDeclarationBlock(Token *declare)
 	// Remove DECLARE for SQL Server, MySQL as it will be specified before each variable
 	if(Token::Compare(declare, "DECLARE", L"DECLARE", 7) == true)
 	{
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 			Token::Remove(declare);
 	}
 	else
@@ -699,14 +699,14 @@ bool SqlParser::ParseOracleVariableDeclarationBlock(Token *declare)
 		}
 		
 		// Add @ for parameter names for SQL Server and Sybase
-		if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+		if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 			ConvertToTsqlVariable(name);
 
 		_spl_variables.Add(name);
 		exists = true;
 
 		// Add DECLARE before name in SQL Server, Sybase and MySQL
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL, SQL_SYBASE) == true)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL, SQL_SYBASE) == true)
 			Prepend(name, "DECLARE ", L"DECLARE ", 8, declare);
 
 		Token *data_type = GetNextToken();
@@ -735,7 +735,7 @@ bool SqlParser::ParseOracleVariableDeclarationBlock(Token *declare)
 			ParseExpression(exp);
 
 			// For SQL Server and PostgreSQL, delete colon
-			if(colon != NULL && Target(SQL_SQL_SERVER, SQL_POSTGRESQL) == true)
+			if(colon != NULL && Target(SQL_BIGQUERY, SQL_POSTGRESQL) == true)
 				Token::Remove(colon);
 			else
 			// For Oracle add :
@@ -764,7 +764,7 @@ bool SqlParser::ParseOracleVariableDeclarationBlock(Token *declare)
 	}
 
 	// Generate variables for cursor parameters 
-	if(exists == true && Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true && _spl_cursor_params.GetCount() > 0)
+	if(exists == true && Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true && _spl_cursor_params.GetCount() > 0)
 	{
 		for(ListwmItem *i = _spl_cursor_params.GetFirst(); i != NULL; i = i->next)
 		{
@@ -867,11 +867,11 @@ bool SqlParser::ParseOracleCursorDeclaration(Token *cursor, ListWM *cursors)
 			// to increase chance that SQL execution plan is re-used
 
 			// Define variable name to use instead of parameter 
-			if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+			if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 			{
 				TokenStr str;
 
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 					str.Append("@", L"@", 1);
 
 				str.Append(name);
@@ -895,13 +895,13 @@ bool SqlParser::ParseOracleCursorDeclaration(Token *cursor, ListWM *cursors)
 			if(comma == NULL)
 				break;
 
-			if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+			if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 				Token::Remove(comma);
 		}
 
 		Token *close = GetNextCharToken(')', L')');
 
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 		{
 			Token::Remove(open);
 			Token::Remove(close);
@@ -911,17 +911,17 @@ bool SqlParser::ParseOracleCursorDeclaration(Token *cursor, ListWM *cursors)
 	Token *is = GetNextWordToken("IS", L"IS", 2);
 
 	// FOR in SQL Server, MySQL
-	if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+	if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 		Token::Change(is, "FOR", L"FOR", 3);
 
 	// For SQL Server, MySQL change to DECLARE name CURSOR
-	if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+	if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 	{
 		Token::Change(cursor, "DECLARE", L"DECLARE", 7);
 		Append(name, " CURSOR", L"CURSOR", 7, cursor); 
 
 		// For SQL Server add LOCAL since cursor are global by default and visible in other scopes
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Append(name, " LOCAL", L" LOCAL", 6, cursor);
 	}
 

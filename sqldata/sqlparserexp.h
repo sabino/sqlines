@@ -6,7 +6,7 @@
 #define sqlines_sqlparserexp_h
 
 // SQL dialect types
-#define SQL_SQL_SERVER			1
+#define SQL_BIGQUERY			1
 #define SQL_ORACLE				2
 #define SQL_DB2					3
 #define SQL_MYSQL				4

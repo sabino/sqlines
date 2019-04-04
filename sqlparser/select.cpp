@@ -150,7 +150,7 @@ bool SqlParser::ParseSelectStatement(Token *select, int block_scope, int select_
 	}
 
 	// Complete LIST aggregate function for SQL Server
-	if(agg_list_func == true && _target == SQL_SQL_SERVER)
+	if(agg_list_func == true && _target == SQL_BIGQUERY)
 		Append(GetLastToken(), " FOR XML PATH('')), 1, 1, '')", L" FOR XML PATH('')), 1, 1, '')", 29, select); 
 
 	// Convert row limits
@@ -164,7 +164,7 @@ bool SqlParser::ParseSelectStatement(Token *select, int block_scope, int select_
 	// Add statement delimiter if not set when source is SQL Server
 	if(select_scope == 0)
 	{
-		SqlServerAddStmtDelimiter();
+		BigQueryAddStmtDelimiter();
 
 		// If there are no non-declare statements above, set last declare
 		if(_spl_first_non_declare == NULL)
@@ -388,7 +388,7 @@ bool SqlParser::ParseSelectList(Token *select, int select_scope, bool *select_in
 			break;
 
 		// For SQL Server and Sybase = means INTO clause
-		if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true && second->Compare('=', L'=') == true)
+		if(Source(SQL_BIGQUERY, SQL_SYBASE) == true && second->Compare('=', L'=') == true)
 		{
 			// SELECT @v = (SELECT ...), @v2 = (SELECT ...) without or with further FROM can be used
 			// in SQL Server
@@ -479,7 +479,7 @@ bool SqlParser::ParseSelectList(Token *select, int select_scope, bool *select_in
 				break;
 
 			// Add @ for parameter names for SQL Server and Sybase
-			if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+			if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 			{
 				ConvertToTsqlVariable(name);
 
@@ -508,7 +508,7 @@ bool SqlParser::ParseSelectList(Token *select, int select_scope, bool *select_in
 		Token *last = GetLastToken();
 
 		// For SQL Server, remove INTO clause
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Token::Remove(into, last);
 
 		// Remove INTO clause in Informix FOR EACH statement when converted to Oracle, PostgreSQL FOR
@@ -576,7 +576,7 @@ bool SqlParser::ParseSelectList(Token *select, int select_scope, bool *select_in
 			PushBack(from);
 
 			// Use SELECT INTO
-			if(Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+			if(Target(SQL_BIGQUERY, SQL_SYBASE) == false)
 			{
 				Token *append = GetLastToken();
 
@@ -699,7 +699,7 @@ bool SqlParser::ParseSelectListPredicate(Token **rowlimit_slist, bool *rowlimit_
 				Token::Remove(next, num);
 			else
 			// TOP n in SQL Server
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				Token::Change(next, "TOP", L"TOP", 3);
 
@@ -845,8 +845,8 @@ bool SqlParser::ParseSelectFromClause(Token *select, bool nested_from, Token **f
 		if(second == NULL)
 		{
 			// SQL Server requires an alias for subquery
-			if(subquery == true && _target == SQL_SQL_SERVER)
-				SqlServerAppendSubqueryAlias(first_end, appended_subquery_aliases);
+			if(subquery == true && _target == SQL_BIGQUERY)
+				BigQueryAppendSubqueryAlias(first_end, appended_subquery_aliases);
 
 			count++;
 			break;
@@ -856,8 +856,8 @@ bool SqlParser::ParseSelectFromClause(Token *select, bool nested_from, Token **f
 		if(second->Compare(',', L',') == true)
 		{
 			// SQL Server requires an alias for subquery
-			if(subquery == true && _target == SQL_SQL_SERVER)
-				SqlServerAppendSubqueryAlias(first_end, appended_subquery_aliases);
+			if(subquery == true && _target == SQL_BIGQUERY)
+				BigQueryAppendSubqueryAlias(first_end, appended_subquery_aliases);
 
 			count++;
 			continue;
@@ -868,8 +868,8 @@ bool SqlParser::ParseSelectFromClause(Token *select, bool nested_from, Token **f
 			IsValidAlias(second) == false)
 		{
 			// SQL Server requires an alias for subquery
-			if(subquery == true && _target == SQL_SQL_SERVER)
-				SqlServerAppendSubqueryAlias(first_end, appended_subquery_aliases);
+			if(subquery == true && _target == SQL_BIGQUERY)
+				BigQueryAppendSubqueryAlias(first_end, appended_subquery_aliases);
 
 			count++;
 
@@ -892,7 +892,7 @@ bool SqlParser::ParseSelectFromClause(Token *select, bool nested_from, Token **f
 	{
 		Token *last = GetLastToken();
 
-		if(_target == SQL_SQL_SERVER) 
+		if(_target == SQL_BIGQUERY) 
 			Token::Remove(from, last);
 		else
 		// MySQL supports Oracle's dual
@@ -1342,7 +1342,7 @@ bool SqlParser::ParseSelectOptions(Token * /*select*/, Token * /*from_end*/, Tok
 			{
 				Token *only = GetNextWordToken("ONLY", L"ONLY", 4);
 
-				if(only != NULL && Target(SQL_SQL_SERVER))
+				if(only != NULL && Target(SQL_BIGQUERY))
 					Token::Remove(option, only);
 			}			
 

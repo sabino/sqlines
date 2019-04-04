@@ -127,7 +127,7 @@ int SqlStdApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 			// Length indicator
 			size_t ind = (size_t)-1;
 
-			if(_source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_SERVER || 
+			if(_source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_BIGQUERY || 
 				_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_MYSQL ||
 				_source_api_type == SQLDATA_ASA)
 			{
@@ -159,7 +159,7 @@ int SqlStdApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 				(_source_api_type == SQLDATA_SYBASE && s_cols[k]._native_fetch_dt == CS_CHAR_TYPE) ||
 				// ODBC CHAR
 				((_source_api_type == SQLDATA_ODBC || _source_api_type == SQLDATA_INFORMIX || 
-				 _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_SERVER) && 
+				 _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_BIGQUERY) && 
 							s_cols[k]._native_fetch_dt == SQL_C_CHAR))
 			{
 				char *data = s_cols[k]._data + s_cols[k]._fetch_len * i;

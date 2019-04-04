@@ -2555,7 +2555,7 @@ int SqlOciApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		if( // ODBC SQL_LONGVARCHAR (CLOB) is read as SQL_C_CHAR, so skip it
 			s_cols[i]._lob == false &&
 			// SQL Server, Informix, DB2 and Sybase ASA types fetched as CHAR
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX ||
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX ||
 				_source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_ASA)
 				&& s_cols[i]._native_fetch_dt == SQL_C_CHAR) ||
 			// MySQL data types bound to string except TEXT and BLOB
@@ -2569,7 +2569,7 @@ int SqlOciApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		if( // ODBC SQL_LONGVARBINARY (BLOB) is read as SQL_C_BINARY, so skip it
 			s_cols[i]._lob == false &&
 			// SQL Server, Informix, DB2 and Sybase ASA types fetched as BINARY
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX ||
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX ||
 				_source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_ASA)
 				&& s_cols[i]._native_fetch_dt == SQL_C_BINARY))
 		{
@@ -2585,7 +2585,7 @@ int SqlOciApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		else
 		// INTEGER
 		if(
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 ||
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 ||
 				_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA)
 					&& s_cols[i]._native_fetch_dt == SQL_C_LONG) ||
 			(_source_api_type == SQLDATA_SYBASE	&& s_cols[i]._native_fetch_dt == CS_INT_TYPE))
@@ -2596,7 +2596,7 @@ int SqlOciApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		// SQL Server DATETIME
 		// Informix DATETIME bound to timestamp struct to support all unit ranges (HOUR TO SECOND i.e)
 		// Sybase ASA DATETIME with fraction
-		if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || 
+		if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || 
 			_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA) &&
 				s_cols[i]._native_fetch_dt == SQL_TYPE_TIMESTAMP) 
 		{
@@ -2685,7 +2685,7 @@ int SqlOciApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 	{
 		for(int k = 0; k < _ins_cols_count; k++)
 		{
-			if(_source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_SERVER || 
+			if(_source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_BIGQUERY || 
 				_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_MYSQL ||
 				_source_api_type == SQLDATA_ASA)
 			{
@@ -2740,7 +2740,7 @@ int SqlOciApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 			}
 
 			// SQL Server, Informix and Sybase ASA DATETIME; DB2 TIMESTAMP bound to struct
-			if((_source_api_type == SQLDATA_SQL_SERVER ||_source_api_type == SQLDATA_DB2 ||
+			if((_source_api_type == SQLDATA_SQL_BIGQUERY ||_source_api_type == SQLDATA_DB2 ||
 				_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA) &&
 					s_cols[k]._native_fetch_dt == SQL_TYPE_TIMESTAMP &&	_ins_cols[k]._ind2[i] != -1) 
 			{

@@ -49,8 +49,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->validateButton, SIGNAL(pressed()), this, SLOT(RunValidation()));
     connect(ui->exitButton, SIGNAL(pressed()), this, SLOT(ExitApp()));
 
-    connect(ui->sqlServerWindowsAuthCheckBox, SIGNAL(stateChanged(int)), this, SLOT(SqlServerWindowsAuthChecked(int)));
-    connect(ui->s_sqlServerWindowsAuthCheckBox, SIGNAL(stateChanged(int)), this, SLOT(SqlServerSWindowsAuthChecked(int)));
+    connect(ui->sqlServerWindowsAuthCheckBox, SIGNAL(stateChanged(int)), this, SLOT(BigQueryWindowsAuthChecked(int)));
+    connect(ui->s_sqlServerWindowsAuthCheckBox, SIGNAL(stateChanged(int)), this, SLOT(BigQuerySWindowsAuthChecked(int)));
 
     connect(this, SIGNAL(UpdateLogSignal()), this, SLOT(UpdateLog()), Qt::QueuedConnection);
 
@@ -95,7 +95,7 @@ int MainWindow::GetDbType(QString name)
     int type = 0;
 
     if(name.compare("Microsoft SQL Server") == 0)
-        type = SQLDATA_SQL_SERVER;
+        type = SQLDATA_SQL_BIGQUERY;
     else
     if(name.compare("Oracle") == 0)
         type = SQLDATA_ORACLE;
@@ -132,7 +132,7 @@ void MainWindow::SourceChanged(QString source)
     // Remove all source tabs
     ui->sourceConnectionsTabWidget->clear();
 
-    if(_source_type == SQLDATA_SQL_SERVER)
+    if(_source_type == SQLDATA_SQL_BIGQUERY)
         ui->sourceConnectionsTabWidget->insertTab(1, ui->sqlServerSourceTab, "Source - SQL Server");
     else
     if(_source_type == SQLDATA_ORACLE)
@@ -165,7 +165,7 @@ void MainWindow::TargetChanged(QString target)
     // Remove all source tabs
     ui->targetConnectionsTabWidget->clear();
 
-    if(_target_type == SQLDATA_SQL_SERVER)
+    if(_target_type == SQLDATA_SQL_BIGQUERY)
         ui->targetConnectionsTabWidget->insertTab(1, ui->sqlServerTargetTab, "Target - SQL Server");
     else
     if(_target_type == SQLDATA_ORACLE)
@@ -396,8 +396,8 @@ void MainWindow::GetSourceConnectionString(std::string &source)
     if(_source_type == SQLDATA_ORACLE)
         GetOracleConnectionString(source, true);
     else
-    if(_source_type == SQLDATA_SQL_SERVER)
-        GetSqlServerConnectionString(source, true);
+    if(_source_type == SQLDATA_SQL_BIGQUERY)
+        GetBigQueryConnectionString(source, true);
     else
     if(_source_type == SQLDATA_SYBASE)
         GetAseConnectionString(source);
@@ -417,8 +417,8 @@ void MainWindow::GetSourceConnectionString(std::string &source)
 
 void MainWindow::GetTargetConnectionString(std::string &target)
 {
-    if(_target_type == SQLDATA_SQL_SERVER)
-        GetSqlServerConnectionString(target, false);
+    if(_target_type == SQLDATA_SQL_BIGQUERY)
+        GetBigQueryConnectionString(target, false);
     else
     if(_target_type == SQLDATA_ORACLE)
         GetOracleConnectionString(target, false);
@@ -570,7 +570,7 @@ void MainWindow::GetOracleConnectionString(std::string &conn, bool source)
         conn += ui->t_oracleSidComboBox->currentText().toStdString();
 }
 
-void MainWindow::GetSqlServerConnectionString(std::string &conn, bool source)
+void MainWindow::GetBigQueryConnectionString(std::string &conn, bool source)
 {
     conn = "sql,";
 
@@ -1699,7 +1699,7 @@ void MainWindow::LoadOptions()
         ui->t_oracleSidComboBox->addItems(oracleList);
 
     // SQL Server connection strings
-    QStringList sqlServerList = _settings->value(INI_SQL_SERVER_CONNECTIONS).toStringList();
+    QStringList sqlServerList = _settings->value(INI_SQL_BIGQUERY_CONNECTIONS).toStringList();
 
     // If list is empty, add predefined values
     if(sqlServerList.isEmpty() == true)
@@ -1710,10 +1710,10 @@ void MainWindow::LoadOptions()
     else
         ui->sqlServerNameComboBox->addItems(sqlServerList);
 
-    ui->sqlServerNameComboBox->setCurrentIndex(_settings->value(INI_LAST_SQL_SERVER_CONNECTION).toInt());
+    ui->sqlServerNameComboBox->setCurrentIndex(_settings->value(INI_LAST_SQL_BIGQUERY_CONNECTION).toInt());
 
     // SQL Server (as source) connection strings
-    sqlServerList = _settings->value(INI_SQL_SERVER_S_CONNECTIONS).toStringList();
+    sqlServerList = _settings->value(INI_SQL_BIGQUERY_S_CONNECTIONS).toStringList();
 
     // If list is empty, add predefined values
     if(sqlServerList.isEmpty() == true)
@@ -1782,8 +1782,8 @@ void MainWindow::LoadOptions()
     QString userName;
     ui->oracleUserNameLineEdit->setText(_settings->value(INI_ORACLE_USERNAME).toString());
     ui->t_oracleUserNameLineEdit->setText(_settings->value(INI_ORACLE_T_USERNAME).toString());
-    ui->sqlServerUserNameLineEdit->setText(_settings->value(INI_SQL_SERVER_USERNAME).toString());
-    ui->s_sqlServerUserNameLineEdit->setText(_settings->value(INI_SQL_SERVER_S_USERNAME).toString());
+    ui->sqlServerUserNameLineEdit->setText(_settings->value(INI_SQL_BIGQUERY_USERNAME).toString());
+    ui->s_sqlServerUserNameLineEdit->setText(_settings->value(INI_SQL_BIGQUERY_S_USERNAME).toString());
     ui->mysqlUserNameLineEdit->setText(_settings->value(INI_MYSQL_USERNAME).toString());
     ui->s_mysqlUserNameLineEdit->setText(_settings->value(INI_MYSQL_S_USERNAME).toString());
     ui->pgUserNameLineEdit->setText(_settings->value(INI_PG_USERNAME).toString());
@@ -1803,8 +1803,8 @@ void MainWindow::LoadOptions()
 
     bool save_ora_password = _settings->value(INI_ORACLE_SAVE_PASSWORD, false).toBool();
     bool save_ora_t_password = _settings->value(INI_ORACLE_T_SAVE_PASSWORD, false).toBool();
-    bool save_sql_password = _settings->value(INI_SQL_SERVER_SAVE_PASSWORD, false).toBool();
-    bool save_sql_s_password = _settings->value(INI_SQL_SERVER_S_SAVE_PASSWORD, false).toBool();
+    bool save_sql_password = _settings->value(INI_SQL_BIGQUERY_SAVE_PASSWORD, false).toBool();
+    bool save_sql_s_password = _settings->value(INI_SQL_BIGQUERY_S_SAVE_PASSWORD, false).toBool();
     bool save_mysql_password = _settings->value(INI_MYSQL_SAVE_PASSWORD, false).toBool();
     bool save_mysql_s_password = _settings->value(INI_MYSQL_S_SAVE_PASSWORD, false).toBool();
     bool save_pg_password = _settings->value(INI_PG_SAVE_PASSWORD, false).toBool();
@@ -1821,10 +1821,10 @@ void MainWindow::LoadOptions()
         ui->t_oraclePasswordLineEdit->setText(DecodePassword(_settings->value(INI_ORACLE_T_PASSWORD).toString()));
 
     if(save_sql_password == true)
-        ui->sqlServerPasswordLineEdit->setText(DecodePassword(_settings->value(INI_SQL_SERVER_PASSWORD).toString()));
+        ui->sqlServerPasswordLineEdit->setText(DecodePassword(_settings->value(INI_SQL_BIGQUERY_PASSWORD).toString()));
 
     if(save_sql_s_password == true)
-        ui->s_sqlServerPasswordLineEdit->setText(DecodePassword(_settings->value(INI_SQL_SERVER_S_PASSWORD).toString()));
+        ui->s_sqlServerPasswordLineEdit->setText(DecodePassword(_settings->value(INI_SQL_BIGQUERY_S_PASSWORD).toString()));
 
     if(save_mysql_password == true)
         ui->mysqlPasswordLineEdit->setText(DecodePassword(_settings->value(INI_MYSQL_PASSWORD).toString()));
@@ -1863,18 +1863,18 @@ void MainWindow::LoadOptions()
     ui->db2SavePasswordCheckBox->setChecked(save_db2_password);
     ui->t_db2SavePasswordCheckBox->setChecked(save_db2_t_password);
 
-    ui->sqlServerWindowsAuthCheckBox->setChecked(_settings->value(INI_SQL_SERVER_AUTH, false).toBool());
-    ui->s_sqlServerWindowsAuthCheckBox->setChecked(_settings->value(INI_SQL_SERVER_S_AUTH, false).toBool());
+    ui->sqlServerWindowsAuthCheckBox->setChecked(_settings->value(INI_SQL_BIGQUERY_AUTH, false).toBool());
+    ui->s_sqlServerWindowsAuthCheckBox->setChecked(_settings->value(INI_SQL_BIGQUERY_S_AUTH, false).toBool());
 
     // SQL Server database list
-    QStringList sqlServerDatabases = _settings->value(INI_SQL_SERVER_DATABASES).toStringList();
+    QStringList sqlServerDatabases = _settings->value(INI_SQL_BIGQUERY_DATABASES).toStringList();
     ui->sqlServerDatabaseComboBox->addItems(sqlServerDatabases);
-    ui->sqlServerDatabaseComboBox->setCurrentIndex(_settings->value(INI_LAST_SQL_SERVER_DATABASE).toInt());
+    ui->sqlServerDatabaseComboBox->setCurrentIndex(_settings->value(INI_LAST_SQL_BIGQUERY_DATABASE).toInt());
 
     // SQL Server (as source) database list
-    sqlServerDatabases = _settings->value(INI_SQL_SERVER_S_DATABASES).toStringList();
+    sqlServerDatabases = _settings->value(INI_SQL_BIGQUERY_S_DATABASES).toStringList();
     ui->s_sqlServerDatabaseComboBox->addItems(sqlServerDatabases);
-    ui->s_sqlServerDatabaseComboBox->setCurrentIndex(_settings->value(INI_LAST_SQL_SERVER_S_DATABASE).toInt());
+    ui->s_sqlServerDatabaseComboBox->setCurrentIndex(_settings->value(INI_LAST_SQL_BIGQUERY_S_DATABASE).toInt());
 
     // MySQL database list
     QStringList mysqlDatabases = _settings->value(INI_MYSQL_DATABASES).toStringList();
@@ -2018,8 +2018,8 @@ void MainWindow::SaveOptions()
 
     SaveComboBoxToIni(INI_ORACLE_CONNECTIONS, ui->oracleSidComboBox);
     SaveComboBoxToIni(INI_ORACLE_T_CONNECTIONS, ui->t_oracleSidComboBox);
-    SaveComboBoxToIni(INI_SQL_SERVER_CONNECTIONS, ui->sqlServerNameComboBox);
-    SaveComboBoxToIni(INI_SQL_SERVER_S_CONNECTIONS, ui->s_sqlServerNameComboBox);
+    SaveComboBoxToIni(INI_SQL_BIGQUERY_CONNECTIONS, ui->sqlServerNameComboBox);
+    SaveComboBoxToIni(INI_SQL_BIGQUERY_S_CONNECTIONS, ui->s_sqlServerNameComboBox);
     SaveComboBoxToIni(INI_MYSQL_CONNECTIONS, ui->mysqlServerNameComboBox);
     SaveComboBoxToIni(INI_MYSQL_S_CONNECTIONS, ui->s_mysqlServerNameComboBox);
     SaveComboBoxToIni(INI_PG_CONNECTIONS, ui->pgServerNameComboBox);
@@ -2027,7 +2027,7 @@ void MainWindow::SaveOptions()
     SaveComboBoxToIni(INI_IFMX_CONNECTIONS, ui->ifmxServerNameComboBox);
 
     _settings->setValue(INI_LAST_ORACLE_CONNECTION, ui->oracleSidComboBox->currentIndex());
-    _settings->setValue(INI_LAST_SQL_SERVER_CONNECTION, ui->sqlServerNameComboBox->currentIndex());
+    _settings->setValue(INI_LAST_SQL_BIGQUERY_CONNECTION, ui->sqlServerNameComboBox->currentIndex());
 
     bool save_ora_password = ui->oracleSavePasswordCheckBox->isChecked();
     bool save_ora_t_password = ui->t_oracleSavePasswordCheckBox->isChecked();
@@ -2050,18 +2050,18 @@ void MainWindow::SaveOptions()
     _settings->setValue(INI_ORACLE_SAVE_PASSWORD, save_ora_password);
     _settings->setValue(INI_ORACLE_T_SAVE_PASSWORD, save_ora_t_password);
 
-    _settings->setValue(INI_SQL_SERVER_USERNAME, ui->sqlServerUserNameLineEdit->text());
-    _settings->setValue(INI_SQL_SERVER_S_USERNAME, ui->s_sqlServerUserNameLineEdit->text());
-    _settings->setValue(INI_SQL_SERVER_PASSWORD, (save_sql_password == true) ? EncodePassword(ui->sqlServerPasswordLineEdit->text()) : "");
-    _settings->setValue(INI_SQL_SERVER_S_PASSWORD, (save_sql_s_password == true) ? EncodePassword(ui->s_sqlServerPasswordLineEdit->text()) : "");
-    _settings->setValue(INI_SQL_SERVER_SAVE_PASSWORD, save_sql_password);
-    _settings->setValue(INI_SQL_SERVER_S_SAVE_PASSWORD, save_sql_s_password);
-    _settings->setValue(INI_SQL_SERVER_AUTH, ui->sqlServerWindowsAuthCheckBox->isChecked());
-    _settings->setValue(INI_SQL_SERVER_S_AUTH, ui->s_sqlServerWindowsAuthCheckBox->isChecked());
-    SaveComboBoxToIni(INI_SQL_SERVER_DATABASES, ui->sqlServerDatabaseComboBox);
-    SaveComboBoxToIni(INI_SQL_SERVER_S_DATABASES, ui->s_sqlServerDatabaseComboBox);
-    _settings->setValue(INI_LAST_SQL_SERVER_DATABASE, ui->sqlServerDatabaseComboBox->currentIndex());
-    _settings->setValue(INI_LAST_SQL_SERVER_S_DATABASE, ui->s_sqlServerDatabaseComboBox->currentIndex());
+    _settings->setValue(INI_SQL_BIGQUERY_USERNAME, ui->sqlServerUserNameLineEdit->text());
+    _settings->setValue(INI_SQL_BIGQUERY_S_USERNAME, ui->s_sqlServerUserNameLineEdit->text());
+    _settings->setValue(INI_SQL_BIGQUERY_PASSWORD, (save_sql_password == true) ? EncodePassword(ui->sqlServerPasswordLineEdit->text()) : "");
+    _settings->setValue(INI_SQL_BIGQUERY_S_PASSWORD, (save_sql_s_password == true) ? EncodePassword(ui->s_sqlServerPasswordLineEdit->text()) : "");
+    _settings->setValue(INI_SQL_BIGQUERY_SAVE_PASSWORD, save_sql_password);
+    _settings->setValue(INI_SQL_BIGQUERY_S_SAVE_PASSWORD, save_sql_s_password);
+    _settings->setValue(INI_SQL_BIGQUERY_AUTH, ui->sqlServerWindowsAuthCheckBox->isChecked());
+    _settings->setValue(INI_SQL_BIGQUERY_S_AUTH, ui->s_sqlServerWindowsAuthCheckBox->isChecked());
+    SaveComboBoxToIni(INI_SQL_BIGQUERY_DATABASES, ui->sqlServerDatabaseComboBox);
+    SaveComboBoxToIni(INI_SQL_BIGQUERY_S_DATABASES, ui->s_sqlServerDatabaseComboBox);
+    _settings->setValue(INI_LAST_SQL_BIGQUERY_DATABASE, ui->sqlServerDatabaseComboBox->currentIndex());
+    _settings->setValue(INI_LAST_SQL_BIGQUERY_S_DATABASE, ui->s_sqlServerDatabaseComboBox->currentIndex());
 
     _settings->setValue(INI_MYSQL_USERNAME, ui->mysqlUserNameLineEdit->text());
     _settings->setValue(INI_MYSQL_S_USERNAME, ui->s_mysqlUserNameLineEdit->text());
@@ -2180,7 +2180,7 @@ void MainWindow::SaveComboBoxToIni(char const *optionName, QComboBox *comboBox)
     _settings->setValue(QString(optionName), list);
 }
 
-void MainWindow::SqlServerWindowsAuthChecked(int state)
+void MainWindow::BigQueryWindowsAuthChecked(int state)
 {
     // If checked disable user name and password inputs
     if(state != 0)
@@ -2195,7 +2195,7 @@ void MainWindow::SqlServerWindowsAuthChecked(int state)
     }
 }
 
-void MainWindow::SqlServerSWindowsAuthChecked(int state)
+void MainWindow::BigQuerySWindowsAuthChecked(int state)
 {
     // If checked disable user name and password inputs
     if(state != 0)

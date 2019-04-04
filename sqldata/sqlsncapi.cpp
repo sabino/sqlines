@@ -955,7 +955,7 @@ int SqlSncApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		}
 		else
 		// SQL Server, Sybase ASA NCHAR, NVARCHAR less than 8000 bytes (4000 characters), DB2 GRAPHIC and VARGRAPHIC
-		if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_ASA) && 
+		if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_ASA) && 
 			s_cols[i]._native_fetch_dt == SQL_C_WCHAR && 
 			s_cols[i]._fetch_len <= 8000 && s_cols[i]._lob == false)
 		{
@@ -965,7 +965,7 @@ int SqlSncApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		// Oracle VARCHAR2, TIMESTAMP or NUMBER/NUMBER(p,s) where s != 0 mapped to string
 		if((_source_api_type == SQLDATA_ORACLE && s_cols[i]._native_fetch_dt == SQLT_STR) ||
 			// SQLServer, DB2, Informix, Sybase ASA, ODBC VARCHAR
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || 
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || 
 			  _source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA || 
 				_source_api_type == SQLDATA_ODBC) && s_cols[i]._native_fetch_dt == SQL_C_CHAR &&
 					s_cols[i]._fetch_len <= 8000 &&
@@ -979,7 +979,7 @@ int SqlSncApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 			// Sybase ASE INT
 			(_source_api_type == SQLDATA_SYBASE && s_cols[i]._native_fetch_dt == CS_INT_TYPE) ||
 			// Informix, Sybase ASA, ODBC INTEGER
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX || 
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX || 
 			   _source_api_type == SQLDATA_ASA || _source_api_type == SQLDATA_ODBC) 
 				&& s_cols[i]._native_fetch_dt == SQL_C_LONG))
 		{
@@ -989,7 +989,7 @@ int SqlSncApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		// SMALLINT
 		if((_source_api_type == SQLDATA_SYBASE && s_cols[i]._native_fetch_dt == CS_SMALLINT_TYPE) ||
 			// Informix, Sybase ASA, ODBC SMALLINT
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX || 
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX || 
 				_source_api_type == SQLDATA_ASA || _source_api_type == SQLDATA_ODBC) && 
 				s_cols[i]._native_fetch_dt == SQL_C_SHORT))
 		{
@@ -1006,7 +1006,7 @@ int SqlSncApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		}
 		else
 		// TIMESTAMP fetched as SQL_TIMESTAMP_STRUCT to SQLCHARACTER 26 bytes (yyyy-mm-dd hh:mi:ss.ffffff)
-		if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || 
+		if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || 
 			_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA || 
 			_source_api_type == SQLDATA_ODBC) && s_cols[i]._native_fetch_dt == SQL_C_TYPE_TIMESTAMP)
 		{
@@ -1031,18 +1031,18 @@ int SqlSncApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		// Map BLOB and CLOB to use bcp_moretext
 		if((_source_api_type == SQLDATA_ORACLE && 
 				(s_cols[i]._native_dt == SQLT_BLOB || s_cols[i]._native_dt == SQLT_CLOB)) ||
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX || 
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX || 
 			   _source_api_type == SQLDATA_ASA || _source_api_type == SQLDATA_ODBC) && 
 					(s_cols[i]._native_dt == SQL_LONGVARBINARY || s_cols[i]._native_dt == SQL_LONGVARCHAR ||
 						s_cols[i]._native_dt == SQL_WLONGVARCHAR)) ||
 			// Sybase ASE TEXT
 			(_source_api_type == SQLDATA_SYBASE && s_cols[i]._native_fetch_dt == CS_CHAR_TYPE && s_cols[i]._fetch_len > 8000) ||
 			// SQL Server VARCHAR(max) and NVARCHAR(max), DB2 CLOB, XML
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2) && 
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2) && 
 				(s_cols[i]._native_fetch_dt == SQL_C_CHAR || s_cols[i]._native_fetch_dt == SQL_C_WCHAR) &&
 			s_cols[i]._fetch_len > 8000) ||
 			// SQL Server VARBINARY(max), DB2 BLOB
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2) && s_cols[i]._native_fetch_dt == SQL_C_BINARY &&
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2) && s_cols[i]._native_fetch_dt == SQL_C_BINARY &&
 				s_cols[i]._fetch_len > 8000) ||
 			// Sybase ASA CHAR/VARCHAR, NCHAR/NVARCHAR greater than 8000 bytes
 			(_source_api_type == SQLDATA_ASA && 
@@ -1055,10 +1055,10 @@ int SqlSncApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 			_bcp_cols[i]._native_dt = SQLVARCHAR;
 
 			if((_source_api_type == SQLDATA_ORACLE && s_cols[i]._native_dt == SQLT_BLOB) ||
-				((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX || 
+				((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX || 
 				  _source_api_type == SQLDATA_ASA || _source_api_type == SQLDATA_ODBC) && 
 				  s_cols[i]._native_dt == SQL_LONGVARBINARY) ||
-				((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2) && s_cols[i]._native_fetch_dt == SQL_C_BINARY) ||
+				((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2) && s_cols[i]._native_fetch_dt == SQL_C_BINARY) ||
 				(_source_api_type == SQLDATA_MYSQL && s_cols[i]._native_fetch_dt == MYSQL_TYPE_BLOB))
 			{
 				binary = true;
@@ -1066,7 +1066,7 @@ int SqlSncApi::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 			}
 			else
 			// Unicode type
-			if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX || 
+			if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX || 
 				_source_api_type == SQLDATA_ASA || _source_api_type == SQLDATA_ODBC) && 
 				(s_cols[i]._native_dt == SQL_WLONGVARCHAR || s_cols[i]._native_dt == SQL_WCHAR || 
 					s_cols[i]._native_dt == SQL_WVARCHAR))
@@ -1163,7 +1163,7 @@ int SqlSncApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 			}
 			else
 			// ODBC indicator contains either NULL or length
-			if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX || 
+			if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX || 
 				_source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_MYSQL || 
 				_source_api_type == SQLDATA_ASA || 
 				_source_api_type == SQLDATA_ODBC) 
@@ -1187,7 +1187,7 @@ int SqlSncApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 				_source_api_type == SQLDATA_INFORMIX ||
 				_source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_MYSQL || 
 				_source_api_type == SQLDATA_ASA || _source_api_type == SQLDATA_ODBC ||
-				_source_api_type == SQLDATA_SQL_SERVER)
+				_source_api_type == SQLDATA_SQL_BIGQUERY)
 				bytes += *ind;
 
 			// Oracle VARCHAR2, RAW
@@ -1198,12 +1198,12 @@ int SqlSncApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 				// MySQL all data types except BLOB
 				(_source_api_type == SQLDATA_MYSQL && s_cols[k]._native_fetch_dt != MYSQL_TYPE_BLOB) ||
 				// Informix, Sybase ASA, ODBC CHAR/VARCHAR and other data types fetched as string
-				((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 ||
+				((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 ||
 				   _source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA || _source_api_type == SQLDATA_ODBC) && 
 				   s_cols[k]._native_fetch_dt == SQL_C_CHAR && s_cols[k]._fetch_len <= 8000 && 
 				   s_cols[k]._lob == false) ||
 				// SQL Server, Sybase ASA NCHAR, NVARCHAR, DB2 GRAPHIC and VARGRAPHIC
-				((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_ASA) && 
+				((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_ASA) && 
 					s_cols[k]._native_fetch_dt == SQL_C_WCHAR &&
 					s_cols[k]._fetch_len <= 8000 && s_cols[k]._lob == false) ||
 				// Informix, Sybase ASA BINARY non-LOB
@@ -1219,7 +1219,7 @@ int SqlSncApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 				// Sybase ASE INT
 				(_source_api_type == SQLDATA_SYBASE && s_cols[k]._native_fetch_dt == CS_INT_TYPE) ||
 				// DB2, Informix, Sybase ASA, ODBC INTEGER
-				((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || 
+				((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || 
 				    _source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA || 
 					_source_api_type == SQLDATA_ODBC) && 
 					s_cols[k]._native_fetch_dt == SQL_C_LONG))
@@ -1234,7 +1234,7 @@ int SqlSncApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 			// Sybase ASE SMALLINT
 			if((_source_api_type == SQLDATA_SYBASE && s_cols[k]._native_fetch_dt == CS_SMALLINT_TYPE) ||
 				// DB2, Informix, Sybase ASA, ODBC SMALLINT
-				((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || 
+				((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || 
 					_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA || 
 					_source_api_type == SQLDATA_ODBC) && 
 					s_cols[k]._native_fetch_dt == SQL_C_SHORT))
@@ -1288,7 +1288,7 @@ int SqlSncApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 			}
 			else
 			// ODBC TIMESTAMP fetched as SQL_TIMESTAMP_STRUCT
-			if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || 
+			if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || 
 				_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA || 
 				_source_api_type == SQLDATA_ODBC) && s_cols[k]._native_fetch_dt == SQL_C_TYPE_TIMESTAMP)
 			{
@@ -1444,7 +1444,7 @@ int SqlSncApi::WriteLob(SqlCol *s_cols, size_t row, size_t *lob_bytes)
 			row_len += len;
 		}
 		else
-		if(_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_INFORMIX || 
+		if(_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_INFORMIX || 
 			_source_api_type == SQLDATA_ASA || _source_api_type == SQLDATA_ODBC)
 		{
 			// First chunk already read, BCP indicator is 4-byte on both 32-bit and 64-bit platforms

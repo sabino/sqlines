@@ -34,7 +34,7 @@
 #define LEVEL_STR			3
 
 // SQL dialect types
-#define SQL_SQL_SERVER			1
+#define SQL_BIGQUERY			1
 #define SQL_ORACLE				2
 #define SQL_DB2					3
 #define SQL_MYSQL				4
@@ -1260,17 +1260,17 @@ public:
 	bool ParseCreateIndexOptions();
 	bool OpenWithReturnCursor(Token *name);
 
-	void SqlServerConvertRowLevelTrigger(Token *table, Token *when, Token *insert, Token *update, Token *delete_, Token *end);
-	void SqlServerAppendSubqueryAlias(Token *append, int *appended_subquery_aliases);
-	void SqlServerDelimiter();
-	void SqlServerAddStmtDelimiter(bool force = false);
-	bool SqlServerGoDelimiter(bool just_remove = false);
-	void SqlServerToDateAdd(Token *op, Token *first, Token* first_end, Token *second, Token *second_end);
-	bool ParseSqlServerSetOptions(Token *set);
-	bool ParseSqlServerIndexOptions(Token *token);
-	bool ParseSqlServerStorageClause();
-	void ParseSqlServerExecProcedure(Token *execute, Token *name);
-	bool ParseSqlServerUpdateStatement(Token *update);
+	void BigQueryConvertRowLevelTrigger(Token *table, Token *when, Token *insert, Token *update, Token *delete_, Token *end);
+	void BigQueryAppendSubqueryAlias(Token *append, int *appended_subquery_aliases);
+	void BigQueryDelimiter();
+	void BigQueryAddStmtDelimiter(bool force = false);
+	bool BigQueryGoDelimiter(bool just_remove = false);
+	void BigQueryToDateAdd(Token *op, Token *first, Token* first_end, Token *second, Token *second_end);
+	bool ParseBigQuerySetOptions(Token *set);
+	bool ParseBigQueryIndexOptions(Token *token);
+	bool ParseBigQueryStorageClause();
+	void ParseBigQueryExecProcedure(Token *execute, Token *name);
+	bool ParseBigQueryUpdateStatement(Token *update);
 
 	bool ParseOracleStorageClause();
 	bool ParseOracleStorageClause(Token *storage);

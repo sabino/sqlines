@@ -700,7 +700,7 @@ int SqlDb2Api::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		
 		// SQL Server CHAR, Informix CHAR
 		if(
-			((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX)
+			((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX)
 				&& s_cols[i]._native_fetch_dt == SQL_C_CHAR) ||
 			// Any MySQL type bound to string
 			_source_api_type == SQLDATA_MYSQL)
@@ -724,7 +724,7 @@ int SqlDb2Api::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		}		
 		else
 		// SQL Server, Informix INT
-		if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX)
+		if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX)
 					&& s_cols[i]._native_dt == SQL_INTEGER) 
 		{
 			// Bind to source buffer directly
@@ -743,7 +743,7 @@ int SqlDb2Api::InitBulkTransfer(const char *table, size_t col_count, size_t allo
 		}
 		else
 		// SQL Server, Informix SMALLINT
-		if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX)
+		if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX)
 					&& s_cols[i]._native_dt == SQL_SMALLINT) 
 		{
 			// Bind to source buffer directly
@@ -785,7 +785,7 @@ int SqlDb2Api::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written,
 	{
 		for(int k = 0; k < _ins_cols_count; k++)
 		{
-			if(_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX ||
+			if(_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX ||
 				_source_api_type == SQLDATA_MYSQL)
 			{
 				// Calculate size for non-NULL values

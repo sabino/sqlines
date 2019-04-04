@@ -319,7 +319,7 @@ bool SqlParser::ParseStatement(Token *token, int scope, int *result_sets)
 
 	// Handle GO after a standalone statement in SQL Server
 	if(_spl_scope == 0)
-		SqlServerGoDelimiter(true);
+		BigQueryGoDelimiter(true);
 
 	return exists;
 }
@@ -376,7 +376,7 @@ bool SqlParser::ParseCreateStatement(Token *create, int *result_sets, bool *proc
 
 		next = GetNextToken();
 
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Token::Remove(public_);
 	}
 	else
@@ -670,7 +670,7 @@ bool SqlParser::ParseAlterTableStatement(Token *alter, Token *table)
     _stmt_scope = prev_stmt_scope;
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -912,7 +912,7 @@ bool SqlParser::ParseBeginStatement(Token *begin)
 	}
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -1072,10 +1072,10 @@ bool SqlParser::ParseCloseStatement(Token *close)
 		return false;
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	// Add DEALLOCATE for SQL Server
-	if(Source(SQL_ORACLE, SQL_DB2, SQL_INFORMIX) == true && _target == SQL_SQL_SERVER)
+	if(Source(SQL_ORACLE, SQL_DB2, SQL_INFORMIX) == true && _target == SQL_BIGQUERY)
 	{
 		Token *semi = GetNextCharToken(';', L';');
 		Token *last = Nvl(semi, GetLastToken());
@@ -1085,7 +1085,7 @@ bool SqlParser::ParseCloseStatement(Token *close)
 	}
 	else
 	// Remove DEALLOCATE following CLOSE for SQL Server, Sybase
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) && Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) && Target(SQL_BIGQUERY, SQL_SYBASE) == false)
 	{
 		Token *deallocate = GetNext("DEALLOCATE", L"DEALLOCATE", 10);
 
@@ -1165,7 +1165,7 @@ bool SqlParser::ParseCommentStatement(Token *comment)
         STMS_STATS("COMMENT ON COLUMN");
 
 		// execute sp_addextendedproperty in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(comment, "EXECUTE", L"EXECUTE", 7);
 			AppendNoFormat(comment, " sp_addextendedproperty", L" sp_addextendedproperty", 23);
@@ -1278,7 +1278,7 @@ bool SqlParser::ParseCommitStatement(Token *commit)
 
 	// Add statement delimiter if not set when source is SQL Server
 	if(!commented)
-		SqlServerAddStmtDelimiter();
+		BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -1350,7 +1350,7 @@ bool SqlParser::ParseCreateTable(Token *create, Token *token)
 
 		if(exists != NULL)
 		{
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true)
 				Token::Remove(if_, exists);
 		}
 		else
@@ -1436,7 +1436,7 @@ bool SqlParser::ParseCreateTable(Token *create, Token *token)
 	ParseStorageClause(table, &id_start, &comment, last_colname, last_colend);
 
 	// Add statement delimiter if not set and handle GO when source is SQL Server, Sybase ASE
-	SqlServerDelimiter();
+	BigQueryDelimiter();
 
 	Token *semi = GetNext(';', L';');
 
@@ -1461,7 +1461,7 @@ bool SqlParser::ParseCreateTable(Token *create, Token *token)
 	if(id_col != NULL && _target == SQL_ORACLE)
 	{
 		// Terminate CREATE TABLE when the delimiter not set in in the source
-		if(semi == NULL && Source(SQL_SQL_SERVER, SQL_SYBASE) == false)
+		if(semi == NULL && Source(SQL_BIGQUERY, SQL_SYBASE) == false)
 			AppendNoFormat(last, ";", L";", 1);
 
 		OracleEmulateIdentity(create, table, id_col, last, id_start, id_inc, id_default);
@@ -1785,7 +1785,7 @@ bool SqlParser::ParseCreateFunction(Token *create, Token *or_, Token *replace, T
 	if(or_ != NULL && replace != NULL)
 	{
 		// DROP FUNCTION for SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Prepend(create, "IF OBJECT_ID('", L"IF OBJECT_ID('", 14);
 			PrependCopy(create, name);
@@ -1833,7 +1833,7 @@ bool SqlParser::ParseCreateFunction(Token *create, Token *or_, Token *replace, T
 		is = GetNextWordToken("IS", L"IS", 2);
 
 		// Change to AS for SQL Server
-		if(_target == SQL_SQL_SERVER && is != NULL)
+		if(_target == SQL_BIGQUERY && is != NULL)
 			Token::Change(is, "AS", L"AS", 2);
 	}
 
@@ -1871,7 +1871,7 @@ bool SqlParser::ParseCreateFunction(Token *create, Token *or_, Token *replace, T
 	if(pl_sql != NULL)
 	{
 		// Replace with GO for SQL Server, as only one CREATE FUNCTION is allowed in a batch
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Token::Change(pl_sql, "GO", L"GO", 2);
         else
         // For MySQL will be later replaced with DELIMITER
@@ -1882,7 +1882,7 @@ bool SqlParser::ParseCreateFunction(Token *create, Token *or_, Token *replace, T
 	// In DB2 procedure can be terminated without any special delimiter
 	if(Source(SQL_DB2) && _spl_delimiter_set == false)
 	{
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Append(GetLastToken(), "\nGO", L"\nGO", 3, create);
 		else
 		if(_target == SQL_ORACLE)
@@ -1915,7 +1915,7 @@ bool SqlParser::ParseFunctionParameters(Token *function_name)
 	if(open == NULL)
 	{
 		// SQL Server requires () in case of empty parameter list
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Append(function_name, "()", L"()", 2);
 
 		return true;
@@ -1941,7 +1941,7 @@ bool SqlParser::ParseFunctionParameters(Token *function_name)
 				in = param_type;
 
 				// For SQL Server IN is not supported, assumed by default, and OUT goes after default
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 					Token::Remove(param_type);
 			}
 			else
@@ -1961,7 +1961,7 @@ bool SqlParser::ParseFunctionParameters(Token *function_name)
 			break;
 
 		// Add @ for parameter names for SQL Server and Sybase
-		if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+		if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 			ConvertToTsqlVariable(name);
 
 		_spl_parameters.Add(name);
@@ -1980,7 +1980,7 @@ bool SqlParser::ParseFunctionParameters(Token *function_name)
 
 				// For SQL Server and MySQL IN is not supported, assumed by default, 
 				// In SQL Server OUT goes after default
-				if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+				if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 					Token::Remove(param_type);
 			}
 			else
@@ -2029,7 +2029,7 @@ bool SqlParser::ParseFunctionParameters(Token *function_name)
 			Token *default_exp = GetNextToken();
 			
 			// SQL Server uses =
-			if(ora_default == true && _target == SQL_SQL_SERVER)
+			if(ora_default == true && _target == SQL_BIGQUERY)
 				Token::Change(next, "=", L"=", 1);
 			else
 			// Oracle uses DEFAULT keyword
@@ -2074,7 +2074,7 @@ bool SqlParser::ParseFunctionParameters(Token *function_name)
 		if(Source(SQL_DB2, SQL_MYSQL) == true && (in != NULL || out != NULL || inout != NULL))
 		{
 			// In MySQL OUT/INOUT go before name, in SQL Server after default
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				// SQL Server does not support INOUT, always use OUT
 				Append(GetLastToken(), " OUT", L" OUT", 4, Nvl(out, inout));
@@ -2218,7 +2218,7 @@ bool SqlParser::ParseCreateProcedure(Token *create, Token *or_, Token *replace, 
 	_spl_start = create;
 
 	// Change PROC word
-	if(_target != SQL_SYBASE && _target != SQL_SQL_SERVER)
+	if(_target != SQL_SYBASE && _target != SQL_BIGQUERY)
 	{
 		if(procedure->Compare("PROC", L"PROC", 4) == true)
 			Token::Change(procedure, "PROCEDURE", L"PROCEDURE", 9);
@@ -2249,7 +2249,7 @@ bool SqlParser::ParseCreateProcedure(Token *create, Token *or_, Token *replace, 
 	if(or_ != NULL && replace != NULL)
 	{
 		// DROP PROCEDURE for SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Prepend(create, "IF OBJECT_ID('", L"IF OBJECT_ID('", 14);
 			PrependCopy(create, name);
@@ -2328,7 +2328,7 @@ bool SqlParser::ParseCreateProcedure(Token *create, Token *or_, Token *replace, 
             TOKEN_CHANGE(pl_sql, "//\n\nDELIMITER ;\n\n");
         else
 		// Replace with GO for SQL Server, as only one CREATE PROCEDURE is allowed in a batch
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			TOKEN_CHANGE(pl_sql, "GO");
 		else
 		// Replace with END_PROC; for Netezza
@@ -2342,7 +2342,7 @@ bool SqlParser::ParseCreateProcedure(Token *create, Token *or_, Token *replace, 
 		if(_target == SQL_ORACLE)
 			Append(GetLastToken(), "\n/", L"\n/", 2, create);
 		else
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Append(GetLastToken(), "\nGO", L"\nGO", 3, create);
 	}
 	else
@@ -2353,7 +2353,7 @@ bool SqlParser::ParseCreateProcedure(Token *create, Token *or_, Token *replace, 
 	}
 
 	// Replace records with variable list
-	if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+	if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 		DiscloseRecordVariables(create);
 
 	SplPostActions();
@@ -2487,7 +2487,7 @@ bool SqlParser::ParseCreateTrigger(Token *create, Token *or_, Token *trigger)
 	Token *table = GetNextIdentToken();
 
 	// In SQL Server ON TABLE goes before type and event
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		AppendSpaceCopy(name, on, table); 
 		Token::Remove(on, table);
@@ -2501,7 +2501,7 @@ bool SqlParser::ParseCreateTrigger(Token *create, Token *or_, Token *trigger)
 	Token *referencing = GetNextWordToken("REFERENCING", L"REFERENCING", 11);
 
 	// REFERENCING not supported in SQL Server
-	if(_target == SQL_SQL_SERVER && referencing != NULL)
+	if(_target == SQL_BIGQUERY && referencing != NULL)
 		Token::Remove(referencing);
 
 	while(referencing != NULL)
@@ -2519,7 +2519,7 @@ bool SqlParser::ParseCreateTrigger(Token *create, Token *or_, Token *trigger)
 
 			_spl_new_correlation_name = GetNextToken();		
 
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 				Token::Remove(next, _spl_new_correlation_name);
 
 			continue;
@@ -2533,7 +2533,7 @@ bool SqlParser::ParseCreateTrigger(Token *create, Token *or_, Token *trigger)
 
 			_spl_old_correlation_name = GetNextToken();
 
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 				Token::Remove(next, _spl_old_correlation_name);
 
 			continue;
@@ -2608,7 +2608,7 @@ bool SqlParser::ParseCreateTrigger(Token *create, Token *or_, Token *trigger)
 	if(as == NULL)
 	{
 		// AS keyword required in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Append(GetLastToken(), " AS", L" AS", 3);
 	}
 
@@ -2621,10 +2621,10 @@ bool SqlParser::ParseCreateTrigger(Token *create, Token *or_, Token *trigger)
 		Append(GetLastToken(), "\n/", L"\n/", 2);
 
 	// FOR EACH ROW not supported in SQL Server
-	if(_target == SQL_SQL_SERVER && row != NULL)
+	if(_target == SQL_BIGQUERY && row != NULL)
 	{
 		// Convert using inserted and deleted system tables
-		SqlServerConvertRowLevelTrigger(table, when, insert, update, delete_, end);
+		BigQueryConvertRowLevelTrigger(table, when, insert, update, delete_, end);
 
 		Token::Remove(for_, each);
 		Token::Remove(row);
@@ -2674,7 +2674,7 @@ bool SqlParser::ParseCreateTriggerBody(Token *create, Token *name, Token *table,
 	}
 
 	// SQL Server, MySQL trigger may not have BEGIN, add it for other databases 
-	if(begin == NULL && Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == false)
+	if(begin == NULL && Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == false)
 		Append(GetLastToken(), "\nBEGIN", L"\nBEGIN", 6, create);
 
 	bool frontier = (begin != NULL) ? true : false;
@@ -2753,7 +2753,7 @@ bool SqlParser::ParseDeclareStatement(Token *declare)
 		Token *as = GetNext("AS", L"AS", 2);
 
 		// AS not allowed in other databases
-		if(as != NULL && _target != SQL_SQL_SERVER)
+		if(as != NULL && _target != SQL_BIGQUERY)
 			Token::Remove(as);
 
 		Token *type = GetNextToken();
@@ -2959,7 +2959,7 @@ bool SqlParser::ParseDeleteStatement(Token *delete_)
     }
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -2973,7 +2973,7 @@ bool SqlParser::ParseDelimiterStatement(Token *delimiter)
 	// Get delimiter, often //
 	Token *sep = GetNextUntilNewlineToken();
 
-	if(Target(SQL_ORACLE, SQL_SQL_SERVER) == true)
+	if(Target(SQL_ORACLE, SQL_BIGQUERY) == true)
 		Token::Remove(delimiter, sep);
 
 	return true;
@@ -3131,7 +3131,7 @@ bool SqlParser::ParseDropTableStatement(Token *drop, Token *table)
 	}
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 	  
 	return true;
 }
@@ -3150,7 +3150,7 @@ bool SqlParser::ParseDropProcedureStatement(Token *drop, Token *procedure)
 		return false;	
   
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -3286,7 +3286,7 @@ bool SqlParser::ParseExecStatement(Token *exec)
 		return false;
 
 	// EXECUTE in Oracle, MySQL
-	if(Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+	if(Target(SQL_BIGQUERY, SQL_SYBASE) == false)
 		Token::Change(exec, "EXECUTE", L"EXECUTE", 7);
 
 	return ParseExecuteStatement(exec);
@@ -3324,7 +3324,7 @@ bool SqlParser::ParseExecuteStatement(Token *execute)
 		Token *close = GetNext(open, ')', L')');
 
 		// EXECUTE sp_executesql in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::ChangeNoFormat(immediate, "sp_executesql", L"sp_executesql", 13); 
 			ConvertToTsqlVariable(var);
@@ -3355,7 +3355,7 @@ bool SqlParser::ParseExecuteStatement(Token *execute)
 					break;
 
 				// Add @ before name
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 					ConvertToTsqlVariable(param);
 
 				format.Append(param);
@@ -3371,7 +3371,7 @@ bool SqlParser::ParseExecuteStatement(Token *execute)
 			format.Append("',", L"',", 2);
 
 			// For SQL Server add format string and remove USING
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				AppendNoFormat(var, &format);
 				Token::Remove(using_);
@@ -3468,8 +3468,8 @@ bool SqlParser::ParseExecuteStatement(Token *execute)
 			// Stored procedure call
 			else
 			{
-				if(Source(SQL_SQL_SERVER, SQL_SYBASE))
-					ParseSqlServerExecProcedure(execute, exp);
+				if(Source(SQL_BIGQUERY, SQL_SYBASE))
+					ParseBigQueryExecProcedure(execute, exp);
 				else
 					Token::Change(execute, "CALL", L"CALL", 4);
 			}
@@ -3478,7 +3478,7 @@ bool SqlParser::ParseExecuteStatement(Token *execute)
 
 	// Add statement delimiter if not set when source is SQL Server
 	if(semi_set == false)
-		SqlServerAddStmtDelimiter();
+		BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -3528,7 +3528,7 @@ bool SqlParser::ParseExitStatement(Token *exit)
 	if(notfound != NULL)
 	{
 		// IF @@FETCH_STATUS <> 0 BREAK in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(exit, "IF", L"IF", 2);
 			Token::Change(when, "@@FETCH_STATUS <> 0 BREAK", L"@@FETCH_STATUS <> 0 BREAK", 25);
@@ -3746,7 +3746,7 @@ bool SqlParser::ParseCreateType(Token *create, Token *type)
 	{
 		Append(create, " OR REPLACE", L" OR REPLACE", 11);
 
-		if(_source == SQL_SQL_SERVER)
+		if(_source == SQL_BIGQUERY)
 		{
 			Token::Change(from, "AS OBJECT (", L"AS OBJECT (", 11);
 			AppendCopy(from, name);
@@ -3871,7 +3871,7 @@ bool SqlParser::ParseCreateSchema(Token *create, Token *schema)
 	}
 
 	// Add statement delimiter if not set and handle GO when source is SQL Server, Sybase ASE
-	SqlServerDelimiter();
+	BigQueryDelimiter();
 
 	return true;
 }
@@ -4216,7 +4216,7 @@ bool SqlParser::ParseDeclareCondition(Token *declare, Token *name, Token *condit
 	_spl_user_exceptions.Add(name, error);
 
 	// Remove statement for SQL Server, Oracle
-	if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true)
+	if(Target(SQL_BIGQUERY, SQL_ORACLE) == true)
 	{
 		Token::Remove(declare, error);
 		Token::Remove(GetNextCharToken(';', L';'));
@@ -4343,12 +4343,12 @@ bool SqlParser::ParseDeclareCursor(Token *declare, Token *name, Token *cursor)
 		else
 		{
 			// Cut FOR SELECT to be used in OPEN
-			if(Target(SQL_ORACLE, SQL_SQL_SERVER) && _source_app != APP_COBOL)
+			if(Target(SQL_ORACLE, SQL_BIGQUERY) && _source_app != APP_COBOL)
 			{
 				Token *cut_start = for_;
 
 				// in SQL Server, Standalone SELECT is used in place of OPEN cursor, so FOR keyword is not required
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 				{
 					cut_start = select;
 					Token::Remove(for_);
@@ -4403,7 +4403,7 @@ bool SqlParser::ParseDeclareCursor(Token *declare, Token *name, Token *cursor)
 	
 	// Add statement delimiter if not set when source is SQL Server
 	if(!moved)
-		SqlServerAddStmtDelimiter();
+		BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -4715,7 +4715,7 @@ bool SqlParser::ParseDeclareGlobalTemporaryTable(Token *declare, Token *global)
 		}
 		else
 		// Add # before table name in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			TokenStr name2;
 
@@ -4797,7 +4797,7 @@ bool SqlParser::ParseDeclareGlobalTemporaryTable(Token *declare, Token *global)
 	}
 	else
 	// CREATE TABLE #name in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(declare, "CREATE", L"CREATE", 6);		
 
@@ -4835,7 +4835,7 @@ bool SqlParser::ParseDeclareLocalTemporaryTable(Token *declare, Token *local)
 		return false;
 
 	// Add @ for parameter names for SQL Server and Sybase
-	if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+	if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 		ConvertToTsqlVariable(name);
 
 	_spl_declared_local_tables.Add(name);
@@ -4854,7 +4854,7 @@ bool SqlParser::ParseDeclareLocalTemporaryTable(Token *declare, Token *local)
 	ParseTempTableOptions(name, NULL, NULL, NULL);
 
 	// DECLARE @name TABLE (columns) in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Remove(local, temporary);
 
@@ -4887,7 +4887,7 @@ bool SqlParser::ParseDeclareVariable(Token *declare, Token *name, Token *type, i
 	ConvertIdentifier(name, SQL_IDENT_VAR);
 
 	// Add @ for parameter names for SQL Server and Sybase
-	if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+	if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 		ConvertToTsqlVariable(name);
 
 	_spl_variables.Add(name);
@@ -4915,7 +4915,7 @@ bool SqlParser::ParseDeclareVariable(Token *declare, Token *name, Token *type, i
 			break;
 
 		// Add @ for parameter names for SQL Server and Sybase
-		if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+		if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 			ConvertToTsqlVariable(var);
 
 		_spl_variables.Add(var);
@@ -4967,14 +4967,14 @@ bool SqlParser::ParseDeclareVariable(Token *declare, Token *name, Token *type, i
 		}
 		else
 		// SQL Server uses = 
-		if(_target == SQL_SQL_SERVER && default_ != NULL)
+		if(_target == SQL_BIGQUERY && default_ != NULL)
 			Token::Change(default_, "=", L"=", 1);
 	}
 
 	Token *last = GetLastToken();
 
 	// If multiple variables specified copy data type and DEFAULT for Oracle, SQL Server, PostgreSQL
-	if(Target(SQL_SQL_SERVER, SQL_ORACLE, SQL_POSTGRESQL) == true && num > 1)
+	if(Target(SQL_BIGQUERY, SQL_ORACLE, SQL_POSTGRESQL) == true && num > 1)
 	{
 		ListwItem *item = vars.GetFirst();
 
@@ -5001,7 +5001,7 @@ bool SqlParser::ParseDeclareVariable(Token *declare, Token *name, Token *type, i
 		Token::Remove(declare);
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	// Remove DB2 SQLCODE and SQLSTATE declarations
 	if(Target(SQL_DB2) == false &&
@@ -5062,7 +5062,7 @@ bool SqlParser::ParseFetchStatement(Token *fetch)
 			_spl_rowtype_fetches.Add(var);
 		
 		// Add @ for parameter names for SQL Server and Sybase
-		if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+		if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 			ConvertToTsqlVariable(var);
 
 		Token *comma = GetNextCharToken(',', L',');
@@ -5090,7 +5090,7 @@ bool SqlParser::ParseFetchStatement(Token *fetch)
 		OracleContinueHandlerForFetch(fetch, name);
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -5194,7 +5194,7 @@ bool SqlParser::ParseForStatement(Token *for_, int scope)
 			ListwmItem *formal_params = NULL;
 
 			// Get reference to formal cursor parameters
-			if(open != NULL && Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+			if(open != NULL && Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 			{
 				formal_params = _spl_cursor_params.GetFirst();
 
@@ -5220,7 +5220,7 @@ bool SqlParser::ParseForStatement(Token *for_, int scope)
 				Token *comma = GetNextCharToken(',', L',');
 
 				// Use assignment statement for variable for SQL Server, MySQL
-				if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+				if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 				{
 					Prepend(for_, "SET ", L"SET ", 4);
 
@@ -5248,7 +5248,7 @@ bool SqlParser::ParseForStatement(Token *for_, int scope)
 				close = GetNextCharToken(')', L')');
 
 			// For SQL Server, MySQL cursor parameters are removed
-			if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+			if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 				Token::Remove(open, close);
 		}
 		else
@@ -5271,7 +5271,7 @@ bool SqlParser::ParseForStatement(Token *for_, int scope)
 	if(loop == NULL)
 		do_ = GetNextWordToken("DO", L"DO", 2);
 
-	if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL))
+	if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL))
 	{
 		// DECLARE var CURSOR AS
 		Token::Change(for_, "DECLARE", L"DECLARE", 7);
@@ -5288,7 +5288,7 @@ bool SqlParser::ParseForStatement(Token *for_, int scope)
 		// Use BEGIN keyword in SQL Server, DO in MySQL
 		if(loop != NULL)
 		{
-            if(_target == SQL_SQL_SERVER)
+            if(_target == SQL_BIGQUERY)
 			    Token::Change(loop, "BEGIN", L"BEGIN", 5);
             else
             if(Target(SQL_MARIADB, SQL_MYSQL))
@@ -5312,7 +5312,7 @@ bool SqlParser::ParseForStatement(Token *for_, int scope)
 		Prepend(begin, " INTO;\n", L" INTO;\n", 7);
 
 		// Start WHILE loop
-        if(_target == SQL_SQL_SERVER)
+        if(_target == SQL_BIGQUERY)
 		    Prepend(begin, "WHILE @@FETCH_STATUS=0\n", L"WHILE @@FETCH_STATUS=0\n", 23);
         else
         if(Target(SQL_MARIADB, SQL_MYSQL))
@@ -5377,7 +5377,7 @@ bool SqlParser::ParseForStatement(Token *for_, int scope)
 			for2 = GetNextWordToken("FOR", L"FOR", 3);
 
 		// END in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			// Fetch the next row at the end of loop
 			Prepend(end, "FETCH ", L"FETCH ", 6);
@@ -5600,7 +5600,7 @@ bool SqlParser::ParseForeachStatement(Token *foreach_, int scope)
 	}
 	else
 	// DECLARE CURSOR, OPEN, WHILE and FETCH in SQL Server
-	if(Target(SQL_SQL_SERVER) == true)
+	if(Target(SQL_BIGQUERY) == true)
 	{
 		TokenStr curs;
 
@@ -5728,7 +5728,7 @@ bool SqlParser::ParseIfStatement(Token *if_, int scope)
 
 	ParseBooleanExpression(SQL_BOOL_IF, if_);
 
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true)
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) == true)
 	{
 		Token *begin = NULL;
 		Token *end = NULL; 
@@ -5792,7 +5792,7 @@ bool SqlParser::ParseIfStatement(Token *if_, int scope)
 		}
 
 		// Other databases use THEN END IF;
-		if(Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+		if(Target(SQL_BIGQUERY, SQL_SYBASE) == false)
 		{
 			// If BEGIN goes after condition replace it with THEN
 			if(begin != NULL)
@@ -5841,7 +5841,7 @@ bool SqlParser::ParseIfStatement(Token *if_, int scope)
 				return false;
 
 			// For SQL Server use BEGIN unless true block is defined as THEN BEGIN ... END ELSE ...
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				// Check if BEGIN follows
 				Token *next_begin = GetNext("BEGIN", L"BEGIN", 5);
@@ -5878,7 +5878,7 @@ bool SqlParser::ParseIfStatement(Token *if_, int scope)
 				Token::Change(elseif, "ELSIF", L"ELSIF", 5);
 			else
 			// SQL Server does not supprt ELSEIF construct
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				Token *elf = Nvl(elseif, elsif);
 
@@ -5901,7 +5901,7 @@ bool SqlParser::ParseIfStatement(Token *if_, int scope)
 			ParseBlock(SQL_BLOCK_IF, true, scope, NULL);
 
 			// For SQL Server end block before ELSE and begin again
-			if(_target == SQL_SQL_SERVER && then_to_begin == true)
+			if(_target == SQL_BIGQUERY && then_to_begin == true)
 			{
 				Prepend(else_, "END\n", L"END\n", 4);
 				Append(else_, " BEGIN", L" BEGIN", 6);
@@ -5917,7 +5917,7 @@ bool SqlParser::ParseIfStatement(Token *if_, int scope)
 			Token *semi = GetNextCharToken(';', L';');
 
 			// For SQL Server use just END, semicolon is optional in SQL Server
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				Token::Remove(end_if);
 
@@ -5967,7 +5967,7 @@ bool SqlParser::ParseWhileStatement(Token *while_, int scope)
 	Token *condition_end = GetLastToken();
 
 	// Use BEGIN keyword in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(loop != NULL)
 			Token::Change(loop, "BEGIN", L"BEGIN", 5);
@@ -6022,7 +6022,7 @@ bool SqlParser::ParseWhileStatementEnd()
 	Token *while_ = (loop == NULL) ? GetNextWordToken("WHILE", L"WHILE", 5) : NULL;
 
 	// END in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(loop != NULL)
 			Token::Remove(loop);
@@ -6052,7 +6052,7 @@ bool SqlParser::ParseWhileStatementEnd()
 	}
 	
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -6208,7 +6208,7 @@ bool SqlParser::ParseInsertStatement(Token *insert)
 		OracleContinueHandlerForInsert(insert);
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -6226,7 +6226,7 @@ bool SqlParser::ParseLetStatement(Token *let)
 		return true;
 
 	// Use SET for SQL Server, DB2, MySQL
-	if(Target(SQL_SQL_SERVER, SQL_DB2, SQL_MYSQL) == true)
+	if(Target(SQL_BIGQUERY, SQL_DB2, SQL_MYSQL) == true)
 		Token::Change(let, "SET", L"SET", 3);
 
 	return ParseSetStatement(let);
@@ -6439,7 +6439,7 @@ bool SqlParser::ParseGrantStatement(Token *grant)
 	}
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -6509,7 +6509,7 @@ bool SqlParser::ParseLoopStatement(Token *loop, int scope)
     PL_STMS_STATS(loop);
 
 	// Use WHILE 1=1 BEGIN in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(loop, "WHILE 1=1 BEGIN", L"WHILE 1=1 BEGIN", 15);
 
     _spl_loops.Add(loop);
@@ -6542,7 +6542,7 @@ bool SqlParser::ParseLoopStatement(Token *loop, int scope)
 	}
 
 	// END in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Remove(loop2);
 
 	return true;
@@ -6795,7 +6795,7 @@ bool SqlParser::ParseOpenStatement(Token *open)
 			ParseSelectStatement(select, 0, SQL_SEL_OPEN, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 			// For SQL Server remove OPEN cur FOR
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 				Token::Remove(open, for_);
 			else
 			// FOR cur IN EXECUTE variable LOOP in Netezza
@@ -6818,7 +6818,7 @@ bool SqlParser::ParseOpenStatement(Token *open)
 			Token *variable = GetNextToken();
 
 			// EXECUTE (@variable) in SQL Server, must be enclosed with () unless stored procedure name
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				Token::Change(open, "EXECUTE", L"EXECUTE", 7);
 				Token::Remove(name, for_);
@@ -6875,12 +6875,12 @@ bool SqlParser::ParseOpenStatement(Token *open)
 		else
 		{
 			// Add FOR SELECT for WITH RETURN cursors
-			if(Target(SQL_ORACLE, SQL_SQL_SERVER))
+			if(Target(SQL_ORACLE, SQL_BIGQUERY))
 			{
 				if(OpenWithReturnCursor(name))
 				{
 					// For SQL Server leave only SELECT, remove OPEN cur
-					if(_target == SQL_SQL_SERVER)
+					if(_target == SQL_BIGQUERY)
 						Token::Remove(open, name);
 				}
 			}
@@ -6893,7 +6893,7 @@ bool SqlParser::ParseOpenStatement(Token *open)
 		ListwmItem *formal_params = NULL;
 
 		// Get reference to the first formal parameter for this cursor
-		if(open2 != NULL && Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+		if(open2 != NULL && Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 		{
 			formal_params = _spl_cursor_params.GetFirst();
 
@@ -6921,7 +6921,7 @@ bool SqlParser::ParseOpenStatement(Token *open)
 			Token *comma = GetNextCharToken(',', L',');
 
 			// Use assignment statement for variable for SQL Server, MySQL
-			if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+			if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 			{
 				Prepend(open, "SET ", L"SET ", 4);
 
@@ -6949,7 +6949,7 @@ bool SqlParser::ParseOpenStatement(Token *open)
 			close2 = GetNextCharToken(')', L')');
 
 		// For SQL Server, MySQL cursor parameters are removed
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 			Token::Remove(open2, close2);
 
 		// FOR cur IN SELECT LOOP in Netezza
@@ -6984,7 +6984,7 @@ bool SqlParser::ParseOpenStatement(Token *open)
 		PushBack(semi);
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	return true;
 }
@@ -7105,7 +7105,7 @@ bool SqlParser::ParsePromptStatement(Token *prompt)
 	}
 
 	// PRINT 'message' in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(prompt, "PRINT", L"PRINT", 5);
 		PrependNoFormat(first, "'", L"'", 1);
@@ -7368,7 +7368,7 @@ bool SqlParser::ParseReturnStatement(Token *return_)
 	}
 
 	// In SQL Server, Sybase ASE RETURN can be without expression and semicolon, check that it is not followed by END
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE))
+	if(Source(SQL_BIGQUERY, SQL_SYBASE))
 	{
 		Token *end = TOKEN_GETNEXTW("END");
 
@@ -7377,7 +7377,7 @@ bool SqlParser::ParseReturnStatement(Token *return_)
 			PushBack(end);
 
 			// Add statement delimiter if not set when source is SQL Server/Sybase
-			SqlServerAddStmtDelimiter();			
+			BigQueryAddStmtDelimiter();			
 			return true;
 		}
 	}
@@ -7470,7 +7470,7 @@ bool SqlParser::ParseReturnStatement(Token *return_)
 		}		
 		else
 		// Use INSERT into table in SQL Server (table-valued function)
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(return_, "INSERT INTO", L"INSERT INTO", 11);
 
@@ -7484,7 +7484,7 @@ bool SqlParser::ParseReturnStatement(Token *return_)
 	}
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 	
 	return true;
 }
@@ -7602,7 +7602,7 @@ bool SqlParser::ParseSetStatement(Token *set)
 			return false;
 
 		// Add @ for parameter names for SQL Server and Sybase (variables already converted)
-		if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+		if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 			ConvertToTsqlVariable(var);
 
 		// In DB2 trigger, column can be assigned without NEW correlation name, make sure it is not an existing local variable
@@ -7621,7 +7621,7 @@ bool SqlParser::ParseSetStatement(Token *set)
 				break;
 
 			// Separate assignment used in SQL Server and Oracle
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true)
 				Token::Remove(comma);
 
 			// Get next variable
@@ -7631,7 +7631,7 @@ bool SqlParser::ParseSetStatement(Token *set)
 				break;
 
 			// Add @ for parameter names for SQL Server and Sybase (variable is already declared)
-			if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+			if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 				ConvertToTsqlVariable(varn);
 
 			vars.Add(varn);
@@ -7688,7 +7688,7 @@ bool SqlParser::ParseSetStatement(Token *set)
 				ParseExpression(expn);
 
 				// Convert to separate statements in SQL Server and Oracle
-				if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true)
+				if(Target(SQL_BIGQUERY, SQL_ORACLE) == true)
 				{
 					Token::Change(comma, ";", L";", 1);
 
@@ -7697,7 +7697,7 @@ bool SqlParser::ParseSetStatement(Token *set)
 					{
 						Token *var = (Token*)i->value;
 												
-						if(_target == SQL_SQL_SERVER)
+						if(_target == SQL_BIGQUERY)
 						{
 							Prepend(expn, "SET ", L"SET ", 4, set);
 							PrependCopy(expn, var);	
@@ -7724,7 +7724,7 @@ bool SqlParser::ParseSetStatement(Token *set)
 			ParseSelectStatement(select, 0, SQL_SEL_EXP, NULL, &list_end, &sel_exp, NULL, NULL, NULL, NULL, NULL);
 		
 			// Use @var = exp in SQL Server
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				ListwItem *e_item = sel_exp.GetFirst();
 
@@ -7784,7 +7784,7 @@ bool SqlParser::ParseSetStatement(Token *set)
 		Leave(SQL_SCOPE_ASSIGNMENT_RIGHT_SIDE);
 
 		// In SQL Server convert to separate SET statements, so braces can be removed
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			if(select != NULL)
 			{
@@ -7844,7 +7844,7 @@ bool SqlParser::ParseSetStatement(Token *set)
 	}		
 
 	// Add statement delimiter if not set when source is SQL Server
-	SqlServerAddStmtDelimiter();
+	BigQueryAddStmtDelimiter();
 
 	if(_spl_first_non_declare == NULL)
 		_spl_first_non_declare = set;
@@ -7861,7 +7861,7 @@ bool SqlParser::ParseSetOptions(Token *set)
 	if(_source == SQL_ORACLE && ParseOracleSetOptions(set) == true)
 		return true;
 
-	if(_source == SQL_SQL_SERVER && ParseSqlServerSetOptions(set) == true)
+	if(_source == SQL_BIGQUERY && ParseBigQuerySetOptions(set) == true)
 		return true;
 
 	if(_source == SQL_DB2 && ParseDb2SetOptions(set) == true)
@@ -7942,7 +7942,7 @@ bool SqlParser::ParseSignalStatement(Token *signal)
 	Token *end = GetLastToken();
 
 	// RAISERROR(text, 16, 1) in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(signal, "RAISERROR", L"RAISERROR", 9);
 
@@ -8071,7 +8071,7 @@ bool SqlParser::ParseUpdateStatement(Token *update)
 	_spl_last_fetch_cursor_name = NULL;
 	
 	// Parse SQL Server, Sybase ASE UPDATE statememt
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) && ParseSqlServerUpdateStatement(update))
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) && ParseBigQueryUpdateStatement(update))
 		return true;
 
 	// Table name
@@ -8320,7 +8320,7 @@ bool SqlParser::ParseUseStatement(Token *use)
 		Token::Change(use, "ALTER SESSION SET CURRENT_SCHEMA =", L"ALTER SESSION SET CURRENT_SCHEMA =", 34);
 
 	// Handle GO after the statement in SQL Server
-	SqlServerGoDelimiter();
+	BigQueryGoDelimiter();
 
 	return true;
 }
@@ -8374,7 +8374,7 @@ bool SqlParser::ParseProcedureParameters(Token *proc_name, int *count, Token **e
 				in = param_type;
 
 				// For SQL Server IN is not supported, assumed by default, and OUT goes after default
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 					Token::Remove(param_type);
 			}
 			else
@@ -8394,7 +8394,7 @@ bool SqlParser::ParseProcedureParameters(Token *proc_name, int *count, Token **e
 			break;
 
 		// Add @ for parameter names for SQL Server and Sybase
-		if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+		if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 			ConvertToTsqlVariable(name);
 
 		_spl_parameters.Add(name);
@@ -8428,7 +8428,7 @@ bool SqlParser::ParseProcedureParameters(Token *proc_name, int *count, Token **e
 				out = GetNextWordToken("OUT", L"OUT", 3);
 
 				// For SQL Server IN is not supported, assumed by default, and OUT goes after default
-				if(Target(SQL_SQL_SERVER) == true)
+				if(Target(SQL_BIGQUERY) == true)
 					Token::Remove(param_type);
 			}
 			else
@@ -8490,7 +8490,7 @@ bool SqlParser::ParseProcedureParameters(Token *proc_name, int *count, Token **e
 			Token *default_exp = GetNextToken();
 			
 			// SQL Server uses =
-			if(ora_default == true && _target == SQL_SQL_SERVER)
+			if(ora_default == true && _target == SQL_BIGQUERY)
 				Token::Change(next, "=", L"=", 1);
 			else
 			// Oracle uses DEFAULT keyword (INT=0 without spaces is possible)
@@ -8503,7 +8503,7 @@ bool SqlParser::ParseProcedureParameters(Token *proc_name, int *count, Token **e
 		}
 
 		// In SQL Server OUT or OUTPUT go after the default; Sybase ASE uses OUTPUT
-		if(Source(SQL_SQL_SERVER, SQL_SYBASE))
+		if(Source(SQL_BIGQUERY, SQL_SYBASE))
 		{
 			Token *param_type = GetNextToken();
 
@@ -8517,7 +8517,7 @@ bool SqlParser::ParseProcedureParameters(Token *proc_name, int *count, Token **e
 					Append(name, " OUT", L" OUT", 4, out);
 
 				// OUT moved for other databases
-				if(_target != SQL_SQL_SERVER)
+				if(_target != SQL_BIGQUERY)
 					Token::Remove(param_type);
 			}
 			else
@@ -8528,7 +8528,7 @@ bool SqlParser::ParseProcedureParameters(Token *proc_name, int *count, Token **e
 		if(_source == SQL_ORACLE && (in != NULL || out != NULL) && sys_refcursor == false)
 		{
 			// In Oracle OUT goes before default, in SQL Server after
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				if(out != NULL)
 				{
@@ -8566,7 +8566,7 @@ bool SqlParser::ParseProcedureParameters(Token *proc_name, int *count, Token **e
 		if(Source(SQL_DB2, SQL_MYSQL, SQL_TERADATA) == true && (in != NULL || out != NULL || inout != NULL))
 		{
 			// In MySQL OUT/INOUT go before name, in SQL Server after default
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				// SQL Server does not support INOUT, always use OUT
 				if(out != NULL || inout != NULL)
@@ -8626,7 +8626,7 @@ bool SqlParser::ParseProcedureParameters(Token *proc_name, int *count, Token **e
 	Token *close = GetNextCharToken(')', L')');
 
 	// If parameters are not enclosed with (), add them for all dataabases except SQL Server and Sybase
-	if(open == NULL && Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+	if(open == NULL && Target(SQL_BIGQUERY, SQL_SYBASE) == false)
 	{
 		// If parameters exist, add ( before first and ) after last parameter
 		if(num > 0)
@@ -8684,7 +8684,7 @@ bool SqlParser::ParseProcedureBody(Token *create, Token *procedure, Token *name,
 		begin = GetNextWordToken("BEGIN", L"BEGIN", 5);
 
 		// In SQL Server, MySQL declaration is after BEGIN, append BEGIN after AS, and remove BEGIN
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true && declare == true && begin != NULL)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true && declare == true && begin != NULL)
 		{
 			// AS will be removed for MySQL
 			Append(as, "\nBEGIN", L"\nBEGIN", 6);
@@ -8695,17 +8695,17 @@ bool SqlParser::ParseProcedureBody(Token *create, Token *procedure, Token *name,
 	}
 	
 	// In SQL Server, often SET NOCOUNT ON is specified after AS before BEGIN
-	if(_source == SQL_SQL_SERVER && _target != SQL_SQL_SERVER && begin == NULL)
+	if(_source == SQL_BIGQUERY && _target != SQL_BIGQUERY && begin == NULL)
 	{
 		Token *set = GetNext("SET", L"SET", 3);
 
 		// Parse SET options and try to get BEGIN
-		if(set != NULL && ParseSqlServerSetOptions(set) == true)
+		if(set != NULL && ParseBigQuerySetOptions(set) == true)
 			begin = GetNext("BEGIN", L"BEGIN", 5);
 	}
 	else
 	// Add SET NOCOUNT ON;
-	if(_source != SQL_SQL_SERVER && _target == SQL_SQL_SERVER)
+	if(_source != SQL_BIGQUERY && _target == SQL_BIGQUERY)
 	{
 		Append(begin, "\nSET NOCOUNT ON;", L"\nSET NOCOUNT ON;", 16);
 	}
@@ -8714,7 +8714,7 @@ bool SqlParser::ParseProcedureBody(Token *create, Token *procedure, Token *name,
 	if(as == NULL)
 	{
 		// Prepend AS before BEGIN; for Oracle see OracleMoveBeginAfterDeclare()
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			if(begin != NULL)
 				Prepend(begin, "AS\n", L"AS\n", 3);
@@ -8756,14 +8756,14 @@ bool SqlParser::ParseProcedureBody(Token *create, Token *procedure, Token *name,
 	// Add BEGIN if it not set
 	// If source SQL Server then standalone DECLARE statements can go in block, and
 	// if target is Oracle BEGIN must be after all declarations, not after AS
-	if(begin == NULL && Target(SQL_ORACLE, SQL_SQL_SERVER, SQL_SYBASE) == false)
+	if(begin == NULL && Target(SQL_ORACLE, SQL_BIGQUERY, SQL_SYBASE) == false)
 		Append(as, "\nBEGIN", L"\nBEGIN", 6);
 
 	bool frontier = (begin != NULL) ? true : false;
 
 	// If BEGIN END is not specified in SQL Server and Sybase ASE, body is terminated with GO, it acts as the frontier
 	// Informix does not use BEGIN keyword, but body always terminated with END PROCEDURE, set frontier
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE, SQL_INFORMIX) == true)
+	if(Source(SQL_BIGQUERY, SQL_SYBASE, SQL_INFORMIX) == true)
 		frontier = true;
 
     _spl_begin_blocks.Add(GetLastToken(begin));
@@ -8803,7 +8803,7 @@ bool SqlParser::ParseProcedureBody(Token *create, Token *procedure, Token *name,
 		InformixConvertReturning(create, procedure);
 
 	// Replace GO
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true && Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) == true && Target(SQL_BIGQUERY, SQL_SYBASE) == false)
 	{
 		// In SQL Server GO can be used to terminate procedure block without using BEGIN END
 		if(begin == NULL && Token::Compare(end, "GO", L"GO", 2) == true)
@@ -8866,7 +8866,7 @@ bool SqlParser::ParseProcedureBody(Token *create, Token *procedure, Token *name,
 			Append(semi, "\n/", L"\n/", 2);
 		else
 		// In SQL Server procedure block can be within AS and GO, no BEGIN END required
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			// But BEGIN END required for function in SQL Server
 			if(_spl_proc_to_func == true)
@@ -8933,7 +8933,7 @@ bool SqlParser::ParseSplEndName(Token *name, Token * /*end*/)
 	if(CompareIdentifiersExistingParts(name, next) == true)
 	{
 		// Remove for SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Token::Remove(next);
 
 		exists = true;
@@ -8966,7 +8966,7 @@ bool SqlParser::ParseFunctionReturns(Token *function)
 	if(Token::Compare(returns, "RETURN", L"RETURN", 6) == true)
 	{
 		// Change to RETURNS in SQL Server, MySQL
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 			Token::Change(returns, "RETURNS", L"RETURNS", 7);
 
 		// Return data type
@@ -9026,7 +9026,7 @@ bool SqlParser::ParseFunctionOptions()
 		if(next->Compare("DETERMINISTIC", L"DETERMINISTIC", 13) == true)
 		{
 			// Not supported in SQL Server
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 				Token::Remove(next);
 
 			exists = true;
@@ -9039,7 +9039,7 @@ bool SqlParser::ParseFunctionOptions()
 			Token *deterministic = GetNextWordToken("DETERMINISTIC", L"DETERMINISTIC", 13);
 
 			// Not supported in SQL Server and Oracle
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && deterministic != NULL)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && deterministic != NULL)
 				Token::Remove(next, deterministic);
 
 			exists = true;
@@ -9052,7 +9052,7 @@ bool SqlParser::ParseFunctionOptions()
 			Token *sql = GetNextWordToken("SQL", L"SQL", 3);
 
 			// Not supported in SQL Server and Oracle
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && sql != NULL)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && sql != NULL)
 				Token::Remove(next, sql);
 
 			exists = true;
@@ -9065,7 +9065,7 @@ bool SqlParser::ParseFunctionOptions()
 			Token *sql = GetNextWordToken("SQL", L"SQL", 3);
 
 			// Not supported in SQL Server and Oracle
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && sql != NULL)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && sql != NULL)
 				Token::Remove(next, sql);
 
 			exists = true;
@@ -9094,7 +9094,7 @@ bool SqlParser::ParseFunctionOptions()
 				Token *action = GetNextWordToken("ACTION", L"ACTION", 6);
 
 				// Not supported in SQL Server and Oracle
-				if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && action != NULL)
+				if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && action != NULL)
 					Token::Remove(next, action);
 			}
 
@@ -9108,7 +9108,7 @@ bool SqlParser::ParseFunctionOptions()
 			Token *action = GetNextWordToken("ACTION", L"ACTION", 6);
 
 			// Not supported in SQL Server and Oracle
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && action != NULL)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && action != NULL)
 				Token::Remove(next, action);
 
 			exists = true;
@@ -9122,7 +9122,7 @@ bool SqlParser::ParseFunctionOptions()
 			Token *data = (sql != NULL) ? GetNextWordToken("DATA", L"DATA", 4) : NULL;
 
 			// Not supported in SQL Server and Oracle
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && sql != NULL)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && sql != NULL)
 				Token::Remove(next, data);
 
 			exists = true;
@@ -9136,7 +9136,7 @@ bool SqlParser::ParseFunctionOptions()
 			Token *data = (sql != NULL) ? GetNextWordToken("DATA", L"DATA", 4) : NULL;
 
 			// Not supported in SQL Server and Oracle
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && sql != NULL)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && sql != NULL)
 				Token::Remove(next, data);
 
 			exists = true;
@@ -9181,7 +9181,7 @@ bool SqlParser::ParseFunctionOptions()
 				input = GetNextWordToken("INPUT", L"INPUT", 5);
 
 			// Not supported in SQL Server and Oracle
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && input != NULL)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && input != NULL)
 				Token::Remove(next, input);
 
 			exists = true;
@@ -9201,7 +9201,7 @@ bool SqlParser::ParseFunctionOptions()
 				Token *input = GetNextWordToken(null2, "INPUT", L"INPUT", 5);;			
 			
 				// Not supported in SQL Server and Oracle
-				if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && input != NULL)
+				if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && input != NULL)
 					Token::Remove(next, input);
 
 				exists = true;
@@ -9219,7 +9219,7 @@ bool SqlParser::ParseFunctionOptions()
 				registers = GetNextWordToken("REGISTERS", L"REGISTERS", 9);
 
 			// Not supported in SQL Server and Oracle
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true && registers != NULL)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE) == true && registers != NULL)
 				Token::Remove(next, registers);
 
 			exists = true;
@@ -9636,7 +9636,7 @@ bool SqlParser::ParseProcedureOptions(Token *create)
 
 			if(last != NULL)
 			{
-				if(_target != SQL_SQL_SERVER)
+				if(_target != SQL_BIGQUERY)
 					Token::Remove(next, last);
 
 				exists = true;
@@ -9694,7 +9694,7 @@ bool SqlParser::ParseFunctionBody(Token *create, Token *function, Token *name, T
 		begin = GetNextWordToken("BEGIN", L"BEGIN", 5);
 
 		// In SQL Server, MySQL declaration is after BEGIN, append BEGIN after AS, and remove BEGIN
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true && declarations == true && begin != NULL)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true && declarations == true && begin != NULL)
 		{
 			// AS will be removed for MySQL
 			Append(as, "\nBEGIN", L"\nBEGIN", 6);
@@ -9712,7 +9712,7 @@ bool SqlParser::ParseFunctionBody(Token *create, Token *function, Token *name, T
 		atomic = GetNextWordToken("ATOMIC", L"ATOMIC", 6);
 
 		// ATOMIC is not supported in SQL Server and Oracle
-		if(Target(SQL_SQL_SERVER, SQL_ORACLE) == true)
+		if(Target(SQL_BIGQUERY, SQL_ORACLE) == true)
 			Token::Remove(atomic);
 	}
 
@@ -9756,11 +9756,11 @@ bool SqlParser::ParseFunctionBody(Token *create, Token *function, Token *name, T
     _spl_begin_blocks.DeleteLast();
 
 	// SQL Server require last statement in function to be RETURN even if the previous is IF RETURN n ELSE RETURN k
-	if(_target == SQL_SQL_SERVER && !TOKEN_CMP(_spl_last_stmt, "RETURN"))
+	if(_target == SQL_BIGQUERY && !TOKEN_CMP(_spl_last_stmt, "RETURN"))
 		APPEND_FMT(GetLastToken(), "\nRETURN NULL;", _spl_last_stmt);
 
 	// Monday is 1 day was defined from the context
-	if(_spl_monday_1 && _target == SQL_SQL_SERVER)
+	if(_spl_monday_1 && _target == SQL_BIGQUERY)
 		APPEND_NOFMT(begin, "\n/* Make sure SET DATEFIRST 1; is set for session. Use SELECT @@DATEFIRST; to see the current value. */");
 
 	Token *end = GetNextWordToken("END", L"END", 3);
@@ -9776,7 +9776,7 @@ bool SqlParser::ParseFunctionBody(Token *create, Token *function, Token *name, T
 	}
 	
 	// BEGIN END required for SQL Server, Oracle functions
-	if(begin == NULL && end == NULL && Target(SQL_SQL_SERVER, SQL_ORACLE) == true)
+	if(begin == NULL && end == NULL && Target(SQL_BIGQUERY, SQL_ORACLE) == true)
 		Append(GetLastToken(), "\nEND;", L"END;", 5);
 
 	// In Oracle ; must follow END name, in SQL Server, DB2, MySQL ; is optional after END
@@ -9790,7 +9790,7 @@ bool SqlParser::ParseFunctionBody(Token *create, Token *function, Token *name, T
 		if(Token::Compare(name, next) == true)
 		{
 			// Remove for SQL Server, MySQL
-			if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL))
+			if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL))
 				Token::Remove(next);
 
 			semi = GetNextCharToken(';', L';');

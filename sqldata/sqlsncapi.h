@@ -211,7 +211,7 @@ public:
 	virtual void GetCatalogSelectionCriteria(std::string &selection_template, std::string &output);
 
 	// Get database type and subtype
-	virtual short GetType() { return SQLDATA_SQL_SERVER; }
+	virtual short GetType() { return SQLDATA_SQL_BIGQUERY; }
 	virtual short GetSubType() { return 0; }
 
 	// Check whether identifier must be quoted

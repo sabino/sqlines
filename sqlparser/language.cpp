@@ -124,7 +124,7 @@ void SqlParser::ConvertIdentifier(Token *token, int type, int scope)
 		return;
 
 	// For SQL Server change ` to []
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(*cur == '`')
 		{
@@ -312,7 +312,7 @@ bool SqlParser::ConvertCursorParameter(Token *token)
 	bool exists = false;
 
 	// Use variables instead of cursor parameters 
-	if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true && _spl_cursor_params.GetCount() > 0)
+	if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true && _spl_cursor_params.GetCount() > 0)
 	{
 		for(ListwmItem *i = _spl_cursor_params.GetFirst(); i != NULL; i = i->next)
 		{
@@ -357,11 +357,11 @@ bool SqlParser::ConvertRecordVariable(Token *token)
 			token->Compare(".", L".", rec->len, 1) == true)
 		{
 			// Change to @rec_field in SQL Server, rec_field in MySQL
-			if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+			if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 			{
 				TokenStr ident;
 
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 					ident.Append("@", L"@", 1);
 
 				// Append record name _ and field name 
@@ -471,7 +471,7 @@ bool SqlParser::ConvertTriggerNewOldColumn(Token *token)
 			token->Compare(".", L".", _spl_old_correlation_name->len, 1) == true) 
 	{
 		// Change to @old_field in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			TokenStr ident("@", L"@", 1);
 
@@ -570,7 +570,7 @@ bool SqlParser::ConvertSessionTemporaryTable(Token *token)
 		TokenStr name;
 
 		// For SQL Server replace SESSION. with #
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			name.Append("#", L"#", 1);
 			name.Append(token, 8, token->len - 8);
@@ -641,7 +641,7 @@ void SqlParser::ConvertParameterIdentifier(Token *token)
 		return;
 
 	// Convert @ to p_ for SQL Server, Sybase
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true && Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) == true && Target(SQL_BIGQUERY, SQL_SYBASE) == false)
 	{
 		if(Token::Compare(token, '@', L'@', 0) == true)
 		{
@@ -693,7 +693,7 @@ void SqlParser::ConvertVariableIdentifier(Token *token)
 	}
 	
 	// Convert @ to v_ for SQL Server, Sybase
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true && Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) == true && Target(SQL_BIGQUERY, SQL_SYBASE) == false)
 	{
 		if(Token::Compare(token, '@', L'@', 0) == true)
 		{
@@ -720,7 +720,7 @@ void SqlParser::ConvertVariableIdentifier(Token *ref, Token *decl)
 // SQL Server, Sybase variable or parameter starting with @
 bool SqlParser::ConvertTsqlVariable(Token *token)
 {
-	if(token == NULL || Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+	if(token == NULL || Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 		return false;
 
 	const char *cur = token->str;
@@ -956,7 +956,7 @@ bool SqlParser::ParseColumnConstraints(Token *create, Token *table_name, Token *
 		if(cns->Compare("ROWGUIDCOL", L"ROWGUIDCOL", 10) == true)
 		{
 			// GUIDs are not automatically generated, so remove the keyword
-			if(_target != SQL_SQL_SERVER)
+			if(_target != SQL_BIGQUERY)
 				Token::Remove(cns);
 
 			num++;
@@ -1071,7 +1071,7 @@ bool SqlParser::ParseColumnConstraints(Token *create, Token *table_name, Token *
 				/*Token *close */ (void) GetNext(')', L')');
 
 				// Compute columns in SQL Server does not include data type and NULL/NOT NULL
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 				{
 					Token::Change(cns, "AS", L"AS", 2);
 					Token::Remove(type, type_end);
@@ -1086,7 +1086,7 @@ bool SqlParser::ParseColumnConstraints(Token *create, Token *table_name, Token *
 		if(cns->Compare("AUTO_INCREMENT", L"AUTO_INCREMENT", 14) == true)
 		{
 			// Change to IDENTITY for SQL Server
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 				Token::Change(cns, "IDENTITY", L"IDENTITY", 8);
 			else
 			// Remove for Oracle
@@ -1158,7 +1158,7 @@ bool SqlParser::ParseColumnConstraints(Token *create, Token *table_name, Token *
 			Token *name = GetNextToken();
 
 			// Remove for SQL Server, Oracle, Hive 
-			if(Target(SQL_SQL_SERVER, SQL_ORACLE, SQL_HIVE) == true)
+			if(Target(SQL_BIGQUERY, SQL_ORACLE, SQL_HIVE) == true)
 				Token::Remove(cns, name);
             else
             // EsgynDB does not support LATIN charset
@@ -1327,7 +1327,7 @@ bool SqlParser::ParseDefaultExpression(Token *type, Token *type_end, Token *toke
 			/*Token *partition_size */ (void) GetNextToken();
 			Token *close = GetNext(')', L')');
 
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				Token::Change(token, "IDENTITY", L"IDENTITY", 8);
 				Token::Remove(first, close);
@@ -1387,7 +1387,7 @@ bool SqlParser::ParseDefaultExpression(Token *type, Token *type_end, Token *toke
 		// Specify current timestamp for TIMESTAMP
 		if(type->Compare("TIMESTAMP", L"TIMESTAMP", 9) == true)
 		{
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 				Append(append_default_value, " GETDATE()", L" GETDATE()", 10, token);
 			else
 			if(_target == SQL_ORACLE)
@@ -1399,7 +1399,7 @@ bool SqlParser::ParseDefaultExpression(Token *type, Token *type_end, Token *toke
 		// Specify current date for DATE
 		if(type->Compare("DATE", L"DATE", 4) == true)
 		{
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 				Append(append_default_value, " GETDATE()", L" GETDATE()", 10, token);
 			else
 			if(_target == SQL_ORACLE)
@@ -1685,7 +1685,7 @@ bool SqlParser::ParseKeyConstraint(Token * /*alter*/, Token *table_name, Token *
 			nonclustered = GetNext("NONCLUSTERED", L"NONCLUSTERED", 12);
 
 		// Remove for other databases
-		if(_target != SQL_SQL_SERVER)
+		if(_target != SQL_BIGQUERY)
 		{
 			Token::Remove(clustered);
 			Token::Remove(nonclustered);
@@ -1866,7 +1866,7 @@ bool SqlParser::ParseKeyIndexOptions()
 		}
 		else
 		// SQL Server WITH (PAD_INDEX = OFF, ...)
-		if(ParseSqlServerIndexOptions(next) == true)
+		if(ParseBigQueryIndexOptions(next) == true)
 		{
 			exists = true;
 			continue;
@@ -2756,7 +2756,7 @@ bool SqlParser::ParseBlock(int type, bool frontier, int scope, int *result_sets)
 			}
 			else
 			// In SQL Server, Sybase procedure (not function) body can be terminated by GO without BEGIN-END block
-			if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true && token->Compare("GO", L"GO", 2) == true)
+			if(Source(SQL_BIGQUERY, SQL_SYBASE) == true && token->Compare("GO", L"GO", 2) == true)
 			{
 				PushBack(token);
 				break;
@@ -2769,7 +2769,7 @@ bool SqlParser::ParseBlock(int type, bool frontier, int scope, int *result_sets)
 		else
 		{
 			// In SQL Server, Sybase procedure (not function) body can be terminated by GO without BEGIN-END block
-			if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true && token->Compare("GO", L"GO", 2) == true)
+			if(Source(SQL_BIGQUERY, SQL_SYBASE) == true && token->Compare("GO", L"GO", 2) == true)
 			{
 				PushBack(token);
 				break;
@@ -2815,12 +2815,12 @@ bool SqlParser::ParseAssignmentStatement(Token *variable)
 	}
 
 	// SET @var = value in SQL Server, SET var = value in MySQL
-	if(Target(SQL_SQL_SERVER, SQL_MYSQL, SQL_SYBASE) == true)
+	if(Target(SQL_BIGQUERY, SQL_MYSQL, SQL_SYBASE) == true)
 	{
 		Prepend(variable, "SET ", L"SET ", 4, _declare_format);
 		
 		// Add @ before the name
-		if(Target(SQL_SQL_SERVER, SQL_SYBASE) == true)
+		if(Target(SQL_BIGQUERY, SQL_SYBASE) == true)
 			ConvertToTsqlVariable(variable);
 
 		Token::Remove(colon);
@@ -2865,7 +2865,7 @@ bool SqlParser::ParseStringConcatenation(Token *first, int prev_operator)
 	ParseExpression(second, SQL_OPERATOR_CONCAT);
 
 	// Change to + in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(bar, "+", L"+", 1);
 		Token::Remove(bar2);
@@ -2944,7 +2944,7 @@ bool SqlParser::ParseConcatOperator(Token *first)
 	ParseExpression(second, SQL_OPERATOR_CONCAT);
 
 	// Change to + operator in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(concat, "+", L"+", 1);
 	else
 	// Change to || operator in Oracle 
@@ -3000,7 +3000,7 @@ bool SqlParser::ParseAdditionOperator(Token *first, int prev_operator)
 	Token *second_end = GetLastToken();
 
 	// In SQL Server + is also used to concatenate strings
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true)
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) == true)
 	{
 		// Number always has priority in SQL Server: both '5'+ 5 and 5 + '5' give result 10, but
 		// if at least one string literal contains not a number ',' i.e. we can consider + as
@@ -3065,8 +3065,8 @@ bool SqlParser::ParseAdditionOperator(Token *first, int prev_operator)
 	// Check for DB2 interval +/- expressions
 	if(_source == SQL_DB2 && second->data_type == TOKEN_DT_INTERVAL)
 	{
-		if(_target == SQL_SQL_SERVER)
-			SqlServerToDateAdd(plus, first, first_end, second, second_end);
+		if(_target == SQL_BIGQUERY)
+			BigQueryToDateAdd(plus, first, first_end, second, second_end);
 
 		// Check for a +/- chain of interval expressions: for example, + expr MONTH - expr DAYS + ...
 		ParseAddSubIntervalChain(first, SQL_OPERATOR_PLUS);
@@ -3155,7 +3155,7 @@ bool SqlParser::ParsePercentOperator(Token *first)
 		}
         else
         // @@FETCH_STATUS = 0 in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			TOKEN_CHANGE(second, "@@FETCH_STATUS = 0");
 			Token::Remove(first, cent);
@@ -3226,12 +3226,12 @@ bool SqlParser::ParseIndexOperator(Token *first)
 	}
 
 	// SUBSTR in Oracle, SUBSTRING in SQL Server
-	if(Target(SQL_ORACLE, SQL_SQL_SERVER) == true)
+	if(Target(SQL_ORACLE, SQL_BIGQUERY) == true)
 	{
 		if(_target == SQL_ORACLE)
 			Prepend(first, "SUBSTR(", L"SUBSTR(", 7);
 		else
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Prepend(first, "SUBSTRING(", L"SUBSTRING(", 10);
 		
 		Token::Change(open, ",", L",", 1);
@@ -3266,7 +3266,7 @@ bool SqlParser::ParseCastOperator(Token *first)
 	Token *end = GetLastToken();
 
 	// Use CAST(exp AS datatype) in Oracle, SQL Server
-	if(Target(SQL_ORACLE, SQL_SQL_SERVER) == true)
+	if(Target(SQL_ORACLE, SQL_BIGQUERY) == true)
 	{
 		Prepend(first, "CAST(", L"CAST(", 5, datatype);
 
@@ -3410,7 +3410,7 @@ bool SqlParser::ParseUnitsOperator(Token *first)
 	}
 	else
 	// For SQL Server, remove field keyword as it will replaced by DATEADD for +/- expressions
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Remove(field);
 	else
 	// INTERVAL 'num' units, or var * INTERVAL '1' units in PostgreSQL
@@ -3473,7 +3473,7 @@ bool SqlParser::ParseSubtractionOperator(Token *first)
 	if(_source == SQL_ORACLE && first->data_type == TOKEN_DT_DATETIME && second->data_type == TOKEN_DT_DATETIME)
 	{
 		// Convert to FLOAT and subtract values
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Prepend(first, "CONVERT(FLOAT, ", L"CONVERT(FLOAT, ", 15);
 			Prepend(second, "CONVERT(FLOAT, ", L"CONVERT(FLOAT, ", 15);
@@ -3486,8 +3486,8 @@ bool SqlParser::ParseSubtractionOperator(Token *first)
 	// Check for DB2 interval +/- expressions
 	if(_source == SQL_DB2 && second->data_type == TOKEN_DT_INTERVAL)
 	{
-		if(_target == SQL_SQL_SERVER)
-			SqlServerToDateAdd(minus, first, first_end, second, second_end);
+		if(_target == SQL_BIGQUERY)
+            BigQueryToDateAdd(minus, first, first_end, second, second_end);
 
 		// Check for a +/- chain of interval expressions: for example, + expr MONTH - expr DAYS + ...
 		ParseAddSubIntervalChain(first, SQL_OPERATOR_PLUS);

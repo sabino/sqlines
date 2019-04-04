@@ -133,7 +133,7 @@ void SqlParser::InformixConvertReturning(Token *create, Token *procedure)
 			}
 			else
 			// RETURNS keyword in SQL Server, PostgreSQL
-			if(Target(SQL_SQL_SERVER, SQL_POSTGRESQL) == true)
+			if(Target(SQL_BIGQUERY, SQL_POSTGRESQL) == true)
 				Token::Change(_spl_returns, "RETURNS", L"RETURNS", 7);
 
 			// RETURNING can be used in a function as well
@@ -267,7 +267,7 @@ void SqlParser::InformixConvertReturning(Token *create, Token *procedure)
 		}
 		else
 		// Use table-valued function in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			TokenStr tab("@", L"@", 1);
 			tab.Append(_spl_name);

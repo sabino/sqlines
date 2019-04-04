@@ -42,7 +42,7 @@
 #define SQLDB_TARGET_ONLY					3
 
 // Database types
-#define SQLDATA_SQL_SERVER					1
+#define SQLDATA_SQL_BIGQUERY					1
 #define SQLDATA_ORACLE						2
 #define SQLDATA_ODBC						3
 #define SQLDATA_MYSQL						4

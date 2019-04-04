@@ -37,11 +37,11 @@ bool SqlParser::ParseMySQLDelimiter(Token * /*create*/)
         return false;
 
     // DB2 and MySQL do not require the delimiter to be on a new line, while this required for other databases
-    if(Target(SQL_SQL_SERVER, SQL_ORACLE) && Token::Compare(char1->prev, '\n', L'\n') == false)
+    if(Target(SQL_BIGQUERY, SQL_ORACLE) && Token::Compare(char1->prev, '\n', L'\n') == false)
         Prepend(char1, "\n", L"\n", 1);
 
     // Use GO for SQL Server
-    if(_target == SQL_SQL_SERVER)
+    if(_target == SQL_BIGQUERY)
     {
         Token::Change(char1, "GO", L"GO", 2);
         Token::Remove(char2);

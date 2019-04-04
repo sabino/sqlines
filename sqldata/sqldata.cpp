@@ -175,7 +175,7 @@ short SqlData::DefineDbType(const char *conn)
 		return SQLDATA_ORACLE;
 	else
 	if(_strnicmp(conn, "sql", 3) == 0)
-		return SQLDATA_SQL_SERVER;
+		return SQLDATA_SQL_BIGQUERY;
 	else
 	if(_strnicmp(conn, "mysql", 5) == 0)
 		return SQLDATA_MYSQL;
@@ -212,8 +212,8 @@ short SqlData::DefineSqlParserType(short type)
 {
 	short rt = 0;
 
-	if(type == SQLDATA_SQL_SERVER)
-		rt = SQL_SQL_SERVER;
+	if(type == SQLDATA_SQL_BIGQUERY)
+		rt = SQL_BIGQUERY;
 	else
 	if(type == SQLDATA_ORACLE)
 		rt = SQL_ORACLE;
@@ -395,12 +395,12 @@ int SqlData::CreateMetadataQueues(std::string &select, std::string &exclude)
 						if(fcols.empty() == false)
 							fcols += ", ";
 
-						if(_target_type == SQL_SQL_SERVER)
+						if(_target_type == SQL_BIGQUERY)
 							fcols += '[';
 
 						fcols += (*k).column;
 
-						if(_target_type == SQL_SQL_SERVER)
+						if(_target_type == SQL_BIGQUERY)
 							fcols += ']';
 					}
 
@@ -411,12 +411,12 @@ int SqlData::CreateMetadataQueues(std::string &select, std::string &exclude)
 						if(pcols.empty() == false)
 							pcols += ", ";
 
-						if(_target_type == SQL_SQL_SERVER)
+						if(_target_type == SQL_BIGQUERY)
 							pcols += '[';
 
 						pcols += (*k).column;
 
-						if(_target_type == SQL_SQL_SERVER)
+						if(_target_type == SQL_BIGQUERY)
 							pcols += ']';
 
 						ptable = (*k).table;
@@ -650,7 +650,7 @@ void SqlData::CreateMetadataTaskForColumnDefault(SqlColMeta &col)
 	task.statement += task.t_name;
 	
 	// in SQL Server 'ADD DEFAULT value FOR col'
-	if(_target_type == SQL_SQL_SERVER)
+	if(_target_type == SQL_BIGQUERY)
 	{
 		task.statement += " ADD DEFAULT ";
 
@@ -2005,7 +2005,7 @@ void SqlData::MapObjectName(std::string &s_schema, std::string &s_table, std::st
 	// Map table name
 	if(s_table.empty() == false)
 	{
-		if(_target_type == SQL_SQL_SERVER && _source_type != SQL_SQL_SERVER)
+		if(_target_type == SQL_BIGQUERY && _source_type != SQL_BIGQUERY)
 		{
 			t_table = "[";
 			if(s_table.at(0) == '"' && s_table.length() > 2)
@@ -2019,7 +2019,7 @@ void SqlData::MapObjectName(std::string &s_schema, std::string &s_table, std::st
 		}
         else
         // In SQL Server, name can be enclosed with []
-        if(_source_type == SQL_SQL_SERVER && _target_type != SQL_SQL_SERVER)
+        if(_source_type == SQL_BIGQUERY && _target_type != SQL_BIGQUERY)
 		{
 			if(s_table.at(0) == '[' && s_table.length() > 2)
             {
@@ -2054,7 +2054,7 @@ void SqlData::MapConstraintName(const char *source, std::string &target, char ty
 
 	// Foreign key constraint can be equal to PK table name (by default in ASA), while
 	// in SQL Server constraints, tables must be unique in the database
-	if(type == 'R' && _target_type == SQL_SQL_SERVER)
+	if(type == 'R' && _target_type == SQL_BIGQUERY)
 	{
 		const char *tab = Str::SkipUntil(p_table, '.');
 
@@ -2070,7 +2070,7 @@ void SqlData::MapConstraintName(const char *source, std::string &target, char ty
 	std::string name = source;
 
 	// SQL Server constraint names must be unique within the database
-	if(_source_type != SQL_SQL_SERVER && _target_type == SQL_SQL_SERVER)
+	if(_source_type != SQL_BIGQUERY && _target_type == SQL_BIGQUERY)
 	{
 		// Check if this name already used
 		std::map<std::string, int>::iterator i = _constraint_ref.find(source);
@@ -2089,12 +2089,12 @@ void SqlData::MapConstraintName(const char *source, std::string &target, char ty
 			_constraint_ref[source] = 1;
 	}
 		
-	if(_source_type != SQL_SQL_SERVER && _target_type == SQL_SQL_SERVER)
+	if(_source_type != SQL_BIGQUERY && _target_type == SQL_BIGQUERY)
 		target += '[';
 
 	target += name;
 
-	if(_source_type != SQL_SQL_SERVER && _target_type == SQL_SQL_SERVER)
+	if(_source_type != SQL_BIGQUERY && _target_type == SQL_BIGQUERY)
 		target += ']';
 }
 
@@ -2112,7 +2112,7 @@ const char* SqlData::GetForeignKeyAction(char action)
 	// RESTRICT in Sybase ASA
 	if(action == FK_ACTION_RESTRICT)
 	{
-		if(_target_type == SQL_SQL_SERVER)
+		if(_target_type == SQL_BIGQUERY)
 			act = "NO ACTION";
 		else 
 			act = "RESTRICT";
@@ -2240,12 +2240,12 @@ void SqlData::GetKeyConstraintColumns(SqlConstraints &cns, std::string &cols)
 		if(c > 0)
 			cols += ", ";
 
-		if(_target_type == SQL_SQL_SERVER)
+		if(_target_type == SQL_BIGQUERY)
 			cols += '[';
 
 		cols += (*i);
 
-		if(_target_type == SQL_SQL_SERVER)
+		if(_target_type == SQL_BIGQUERY)
 			cols += ']';
 
 		c++;
@@ -2267,12 +2267,12 @@ void SqlData::GetForeignKeyConstraintColumns(SqlConstraints &cns, std::string &f
 		if(c > 0)
 			fcols += ", ";
 
-		if(_target_type == SQL_SQL_SERVER)
+		if(_target_type == SQL_BIGQUERY)
 			fcols += '[';
 
 		fcols += (*i);
 
-		if(_target_type == SQL_SQL_SERVER)
+		if(_target_type == SQL_BIGQUERY)
 			fcols += ']';
 
 		c++;
@@ -2285,12 +2285,12 @@ void SqlData::GetForeignKeyConstraintColumns(SqlConstraints &cns, std::string &f
 		if(c > 0)
 			pcols += ", ";
 
-		if(_target_type == SQL_SQL_SERVER)
+		if(_target_type == SQL_BIGQUERY)
 			pcols += '[';
 
 		pcols += (*i);
 
-		if(_target_type == SQL_SQL_SERVER)
+		if(_target_type == SQL_BIGQUERY)
 			pcols += ']';
 
 		c++;

@@ -397,7 +397,10 @@ short Sqlines::DefineType(const char *name)
 	short type = 0;
 
 	if(_stricmp(name, "sql") == 0)
-		type = SQL_SQL_SERVER;
+		type = SQL_BIGQUERY;
+	else
+	if(_stricmp(name, "bigquery") == 0)
+		type = SQL_BIGQUERY;
 	else
 	if(_stricmp(name, "oracle") == 0)
 		type = SQL_ORACLE;

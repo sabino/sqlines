@@ -1031,7 +1031,7 @@ void SqlDataCmd::LogConnection(int type, int rc, const char *version, const char
 		_log.Log("Oracle ");
 	else
 	// SQL Server version includes full product name
-	if(type == SQLDATA_SQL_SERVER && (version == NULL || *version == '\x0'))
+	if(type == SQLDATA_SQL_BIGQUERY && (version == NULL || *version == '\x0'))
 		_log.Log("SQL Server ");
 	else
 	if(type == SQLDATA_MYSQL)

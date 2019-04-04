@@ -661,7 +661,7 @@ void SqlParser::ConvertSchemaName(Token *token, TokenStr &ident, size_t *len)
 		schema.Clear();
 	else
 	// dbo. in SQL Server, Sybase ASE
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) && !Target(SQL_SQL_SERVER, SQL_SYBASE) && 
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) && !Target(SQL_BIGQUERY, SQL_SYBASE) && 
 		(schema.Compare("[dbo].", L"[dbo].", 6) == true || schema.Compare("dbo.", L"dbo.", 4) == true))
 		schema.Clear();		
 	else
@@ -715,7 +715,7 @@ void SqlParser::ConvertObjectName(Token *token, TokenStr &ident, size_t *len)
 	bool changed = false;
 
 	// Remove [] in SQL Server, Sybase
-	if(Source(SQL_SQL_SERVER, SQL_SYBASE) == true && Target(SQL_SQL_SERVER, SQL_SYBASE) == false)
+	if(Source(SQL_BIGQUERY, SQL_SYBASE) == true && Target(SQL_BIGQUERY, SQL_SYBASE) == false)
 	{
 		if(name.len > 2 && name.Compare('[', L'[', 0) == true && 
 				name.Compare(']', L']', name.len - 1) == true)

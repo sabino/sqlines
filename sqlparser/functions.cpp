@@ -1252,7 +1252,7 @@ bool SqlParser::ParseFunctionAddMonths(Token *name, Token *open)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert to DATEADD in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "DATEADD", L"DATEADD", 7);
 
@@ -1396,7 +1396,7 @@ bool SqlParser::ParseFunctionAsehostname(Token *name, Token *open)
 		return false;
 
 	// Convert to HOST_NAME() in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "HOST_NAME", L"HOST_NAME", 9);
 	else
 	// Convert to SYS_CONTEXT('USERENV', 'SERVER_HOST') in Oracle
@@ -1481,7 +1481,7 @@ bool SqlParser::ParseFunctionAtan2(Token *name, Token *open)
 	}
 	else
 	// Convert to ATN2 in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "ATN2", L"ATN2", 4);
 
 	return true;
@@ -1630,7 +1630,7 @@ bool SqlParser::ParseFunctionBiginttohex(Token *name, Token * /*open*/)
 	Token *close = GetNextCharToken(')', L')');
 
 	// Convert to CONVERT in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CONVERT(VARBINARY(8), CAST(", L"CONVERT(VARBINARY(8), CAST(", 26);
 		Prepend(close, " AS BIGINT)", L" AS BIGINT)", 11);
@@ -1787,7 +1787,7 @@ bool SqlParser::ParseFunctionBitLength(Token *name, Token * /*open*/)
 	}
 	else
 	// Convert to LEN * 8 in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "LEN", L"LEN", 3);
 		Append(close, " * 8", L" * 8", 4);
@@ -1894,7 +1894,7 @@ bool SqlParser::ParseFunctionBitSubstr(Token *name, Token * /*open*/)
 		Token::Change(name, "SUBSTR", L"SUBSTR", 6);
 	else
 	// Convert to SUBSTRING in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "SUBSTRING", L"SUBSTRING", 9);
 
 	return true;
@@ -1994,7 +1994,7 @@ bool SqlParser::ParseFunctionByteLength(Token *name, Token * /*open*/)
 		Token::Change(name, "LENGTHB", L"LENGTHB", 7);
 	else
 	// Convert to DATALENGTH in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "DATALENGTH", L"DATALENGTH", 10);
 
 	return true;
@@ -2040,7 +2040,7 @@ bool SqlParser::ParseFunctionByteSubstr(Token *name, Token* /*open*/)
 		Token::Change(name, "SUBSTRB", L"SUBSTRB", 7);
 	else
 	// Convert to SUBSTRING in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "SUBSTRING", L"SUBSTRING", 9);
 
 	return true;
@@ -2091,10 +2091,10 @@ bool SqlParser::ParseFunctionCast(Token *cast, Token *open)
 	{
 		// Convert to TO_CHAR in Oracle
 		if(_source != SQL_ORACLE && _target == SQL_ORACLE)
-		{
-			Token::Change(cast, "TO_CHAR", L"TO_CHAR", 7);
-			Token::Remove(as, type);
-		}
+        {
+            Token::Change(cast, "TO_CHAR", L"TO_CHAR", 7);
+            Token::Remove(as, type);
+        }
 	}
 	else
 	// CAST AS DATE
@@ -2142,7 +2142,7 @@ bool SqlParser::ParseFunctionCeil(Token *name, Token* /*open*/)
 		Token::Remove(sign);
 	else
 	// Convert to CEILING in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "CEILING", L"CEILING", 7);
 
 	return true;
@@ -2187,7 +2187,7 @@ bool SqlParser::ParseFunctionChar(Token *name, Token* open)
 
 	// Possible conflict with data type, so check the source
 	// Do not check that previous is a word as SELECT CHAR(), THEN CHAR etc. are possible
-	if(Source(SQL_SQL_SERVER, SQL_DB2, SQL_SYBASE, SQL_SYBASE_ASA) == false)
+	if(Source(SQL_BIGQUERY, SQL_DB2, SQL_SYBASE, SQL_SYBASE_ASA) == false)
 		return false;
 
 	Token *exp = GetNextToken();
@@ -2239,7 +2239,7 @@ bool SqlParser::ParseFunctionChar(Token *name, Token* open)
 			// ISO or JIS datetime format YYYY-MM-DD
 			if(format->Compare("ISO", L"ISO", 3) || format->Compare("JIS", L"JIS", 3))
 			{
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 				{
 					TOKEN_CHANGE(name, "CONVERT");
 					APPEND_FIRST_FMT(open, "VARCHAR, ", name);
@@ -2256,7 +2256,7 @@ bool SqlParser::ParseFunctionChar(Token *name, Token* open)
 					Token::Change(format, "'MM/DD/YYYY'", L"'MM/DD/YYYY'", 12);
 				}
 				else
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 				{
 					TOKEN_CHANGE(name, "CONVERT");
 					APPEND_FIRST_FMT(open, "VARCHAR, ", name);
@@ -2267,7 +2267,7 @@ bool SqlParser::ParseFunctionChar(Token *name, Token* open)
 			// EUR datetime format DD.MM.YYYY
 			if(format->Compare("EUR", L"EUR", 3) == true)
 			{
-				if(_target == SQL_SQL_SERVER)
+				if(_target == SQL_BIGQUERY)
 				{
 					TOKEN_CHANGE(name, "CONVERT");
 					APPEND_FIRST_FMT(open, "VARCHAR, ", name);
@@ -2338,7 +2338,7 @@ bool SqlParser::ParseFunctionCharacterLength(Token *name, Token* /*open*/)
 	}
 	else
 	// Convert to LEN in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "LEN", L"LEN", 3);
 
 	return true;
@@ -2889,7 +2889,7 @@ bool SqlParser::ParseFunctionConvertImage(Token *name, Token *open, Token *datat
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert IMAGE datatype to VARBINARY(max) in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(datatype, "VARBINARY", L"VARBINARY", 9);
 		AppendNoFormat(datatype, "(max)", L"(max)", 5);
@@ -2948,7 +2948,7 @@ bool SqlParser::ParseFunctionConvertText(Token *name, Token *open, Token *dataty
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert TEXT datatype to VARCHAR(max) in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(datatype, "VARCHAR", L"VARCHAR", 7);
 		AppendNoFormat(datatype, "(max)", L"(max)", 5);
@@ -3241,7 +3241,7 @@ bool SqlParser::ParseFunctionCurrent(Token *name)
 	// CURRENT DATE in DB2, Sybase ASA
 	if(second->Compare("DATE", L"DATE", 4) == true)
 	{
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "CONVERT(DATE, GETDATE())", L"CONVERT(DATE, GETDATE())", 24);
 			Token::Remove(second);
@@ -3309,9 +3309,9 @@ bool SqlParser::ParseFunctionCurrent(Token *name)
 		}
 		else
 		// Convert to GETDATE() in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
-			Token::Change(second, "GETDATE()", L"GETDATE()", 9);
+			Token::Change(second, "CURRENT_DATE()", L"CURRENT_DATE()", 15);
 			Token::Remove(name);
 		}
 		else
@@ -3331,7 +3331,7 @@ bool SqlParser::ParseFunctionCurrent(Token *name)
 	// CURRENT TIME
 	if(second->Compare("TIME", L"TIME", 4) == true)
 	{
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "CONVERT(TIME, GETDATE())", L"CONVERT(TIME, GETDATE())", 24);
 			Token::Remove(second);
@@ -3350,7 +3350,7 @@ bool SqlParser::ParseFunctionCurrent(Token *name)
 	if(second->Compare("USER", L"USER", 4) == true)
 	{
 		// SQL Server has CURRENT_USER but it returns dbo i.e
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "SYSTEM_USER", L"SYSTEM_USER", 11);
 			Token::Remove(second);
@@ -3388,8 +3388,8 @@ bool SqlParser::ParseFunctionCurrent(Token *name)
 		if(_target == SQL_ORACLE)
 			Token::Change(name, "SYSTIMESTAMP", L"SYSTIMESTAMP", 12);
 		else
-		if(_target == SQL_SQL_SERVER)
-			Token::Change(name, "GETDATE()", L"GETDATE()", 9);
+		if(_target == SQL_BIGQUERY && second->Compare("ROW", L"ROW", 3) == false)
+			Token::Change(name, "CURRENT_DATE()", L"CURRENT_DATE()", 14);
 
 		PushBack(second);
 	}
@@ -3406,7 +3406,7 @@ bool SqlParser::ParseFunctionCurrentBigdatetime(Token *name, Token *open)
 	Token *close = GetNextCharToken(')', L')');
 
 	// Convert to GETDATE() in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "GETDATE", L"GETDATE", 7);
 	else
 	// Convert to SYSTIMESTAMP in Oracle
@@ -3428,7 +3428,7 @@ bool SqlParser::ParseFunctionCurrentBigtime(Token *name, Token *open)
 	Token *close = GetNextCharToken(')', L')');
 
 	// Convert to GETDATE() in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "GETDATE", L"GETDATE", 7);
 	else
 	// Convert to SYSTIMESTAMP in Oracle
@@ -3466,7 +3466,7 @@ bool SqlParser::ParseFunctionCurrentDate(Token *name)
 		Token::Change(name, "TRUNC(SYSDATE)", L"TRUNC(SYSDATE)", 14);
 	else
 	// Convert to GETDATE in SQL Server
-	if(_target == SQL_SQL_SERVER && _source != SQL_ORACLE)
+	if(_target == SQL_BIGQUERY && _source != SQL_ORACLE)
 		Token::Change(name, "CONVERT(DATE, GETDATE())", L"CONVERT(DATE, GETDATE())", 24);
 	else
 	// Convert Oracle CURRENT_DATE to NOW() in MySQL
@@ -3491,7 +3491,7 @@ bool SqlParser::ParseFunctionCurrentSqlid(Token *name)
 	if(name == NULL)
 		return false;
 
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "CURRENT_SCHEMA", L"CURRENT_SCHEMA", 14);
 
 	return true;
@@ -3508,7 +3508,7 @@ bool SqlParser::ParseFunctionCurrentTimestamp(Token *name)
 		Token::Change(name, "SYSTIMESTAMP", L"SYSTIMESTAMP", 12);
 	else
 	// Convert to GETDATE() in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "GETDATE()", L"GETDATE()", 9);
 	else
 	// Convert Oracle CURRENT_DATE to NOW() in MySQL
@@ -3542,7 +3542,7 @@ bool SqlParser::ParseFunctionCurrentTime(Token *name)
 		Token::Remove(open, close);
 
 	// Convert to Getdate in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "GETDATE()", L"GETDATE()", 9);
 	else
 	// Convert to CURRENT_TIMESTAMP in Oracle
@@ -3559,7 +3559,7 @@ bool SqlParser::ParseFunctionCurrentUser(Token *name)
 		return false;
 
 	// SQL Server has CURRENT_USER but it returns dbo i.e
-	if(_source != SQL_SQL_SERVER && _target == SQL_SQL_SERVER)
+	if(_source != SQL_BIGQUERY && _target == SQL_BIGQUERY)
 		Token::Change(name, "SYSTEM_USER", L"SYSTEM_USER", 11);
 	else
 	if(_target == SQL_ORACLE)
@@ -3751,7 +3751,7 @@ bool SqlParser::ParseFunctionDate(Token *name, Token *open)
 		}
 		else
 		// CONVERT(DATE, exp) in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "CONVERT", L"CONVERT", 7);
 			AppendFirst(open, "DATE, ", L"DATE, ", 6, name);
@@ -3783,7 +3783,7 @@ bool SqlParser::ParseFunctionDate(Token *name, Token *open)
 		}
 		else
 		// CONVERT(DATE, exp) in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "CONVERT", L"CONVERT", 7);
 			AppendFirst(open, "DATE, ", L"DATE, ", 6, name);
@@ -4288,7 +4288,7 @@ bool SqlParser::ParseFunctionDateformatASA(Token *name, Token *open)
 	// Default format
 	if(format == NULL)
 	{
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "CONVERT(VARCHAR, ", L"CONVERT(VARCHAR, ", 17);
 			Token::Remove(open);
@@ -4306,7 +4306,7 @@ bool SqlParser::ParseFunctionDateformatASA(Token *name, Token *open)
 			Token::Change(name, "TO_CHAR", L"TO_CHAR", 7);
 		else
 		// Define a style for SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			// YYYY-MM-DD
 			if(format->Compare("'YYYY-MM-DD'", L"'YYYY-MM-DD'", 12) == true)
@@ -4499,7 +4499,7 @@ bool SqlParser::ParseFunctionDatetime(Token *name, Token *open)
 		Token::Change(name, "TO_TIMESTAMP", L"TO_TIMESTAMP", 12);
 	else
 	// CONVERT(DATETIME, exp) in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CONVERT", L"CONVERT", 7);
 		Append(open, "DATETIME, ", L"DATETIME, ", 10, name);
@@ -4677,7 +4677,7 @@ bool SqlParser::ParseFunctionDayname(Token *name, Token* /*open*/)
 	}
 	else
 	// Convert to DATENAME in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "DATENAME", L"DATENAME", 8);
 		Prepend(date, "DW, ", L"DW, ", 4, name);
@@ -4735,7 +4735,7 @@ bool SqlParser::ParseFunctionDayofweekIso(Token *name, Token *open)
 		Append(exp, ", 'D')", L", 'D')", 6);
 	}
 	else
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		// Note. SET DATEFIRST 1 must be executed in SQL Server as the start day is Sunday by default in US (1 in Europe i.e.), while ISO requires Monday
 		// SET DATEFIRST 1 is not allowed inside CREATE FUNCTION(!) 
@@ -4802,7 +4802,7 @@ bool SqlParser::ParseFunctionDays(Token *name, Token *open)
 
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		// Second parameter is specified
 		if(second != NULL)
@@ -4979,7 +4979,7 @@ bool SqlParser::ParseFunctionDbinfo(Token *name, Token *open)
 		}
 		else
 		// @@ROWCOUNT in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "@@ROWCOUNT", L"@@ROWCOUNT", 10);
 			Token::Remove(open, close);
@@ -5022,7 +5022,7 @@ bool SqlParser::ParseFunctionDbInstanceid(Token *name, Token *open)
 	}
 	else
 	// Convert to @@SERVICENAME in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(exp == NULL)
 		{
@@ -5470,7 +5470,7 @@ bool SqlParser::ParseFunctionDow(Token *name, Token* /*open*/)
 	}
 	else
 	// Convert to DATEPART in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "DATEPART", L"DATEPART", 8);
 		Prepend(date, "DW, ", L"DW, ", 4, name);
@@ -5563,7 +5563,7 @@ bool SqlParser::ParseFunctionErrormsg(Token *name, Token *open)
 	}
 	else
 	// Convert to STR(@@ERROR) in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(exp == NULL)
 		{
@@ -5636,7 +5636,7 @@ bool SqlParser::ParseFunctionExtract(Token *name, Token* /*open*/)
 	if(Token::Compare(unit, "YEAR", L"YEAR", 4) == true)
 	{
 		// Convert to YEAR function in SQL Server, MySQL
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 		{
 			Token::Change(name, "YEAR", L"YEAR", 4);
 			
@@ -5648,7 +5648,7 @@ bool SqlParser::ParseFunctionExtract(Token *name, Token* /*open*/)
 	if(Token::Compare(unit, "MONTH", L"MONTH", 5) == true)
 	{
 		// Convert to MONTH function in SQL Server, MySQL
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 		{
 			Token::Change(name, "MONTH", L"MONTH", 5);
 			
@@ -5660,7 +5660,7 @@ bool SqlParser::ParseFunctionExtract(Token *name, Token* /*open*/)
 	if(Token::Compare(unit, "DAY", L"DAY", 3) == true)
 	{
 		// Convert to DAY function in SQL Server, MySQL
-		if(Target(SQL_SQL_SERVER, SQL_MARIADB, SQL_MYSQL) == true)
+		if(Target(SQL_BIGQUERY, SQL_MARIADB, SQL_MYSQL) == true)
 		{
 			Token::Change(name, "DAY", L"DAY", 3);
 			
@@ -5721,7 +5721,7 @@ bool SqlParser::ParseFunctionFirst(Token *name, Token *open)
 	Token *close = GetNextCharToken(')', L')');
 
 	// TOP 1 exp in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "TOP 1", L"TOP 1", 5);
 		Token::Change(open, " ", L" ", 1);
@@ -5886,7 +5886,7 @@ bool SqlParser::ParseFunctionGreater(Token *name, Token *open)
 		Token::Change(name, "GREATEST", L"GREATEST", 8);
 	else
 	// Convert to CASE expression in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CASE WHEN ", L"CASE WHEN ", 10);
 		Token::Change(comma, " >", L" >", 2);
@@ -5964,7 +5964,7 @@ bool SqlParser::ParseFunctionHash(Token *name, Token *open)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert to HASHBYTES in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "HASHBYTES", L"HASHBYTES", 9);
 
@@ -6042,7 +6042,7 @@ bool SqlParser::ParseFunctionHextobigint(Token *name, Token *open)
 	Token *close = GetNextCharToken(')', L')');
 
 	// Convert to CONVERT in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CONVERT(BIGINT, CONVERT(VARBINARY(8), ", 
 			L"CONVERT(BIGINT, CONVERT(VARBINARY(8), ", 38);
@@ -6077,7 +6077,7 @@ bool SqlParser::ParseFunctionHextoint(Token *name, Token *open)
 	Token *close = GetNextCharToken(')', L')');
 
 	// Convert to CONVERT in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CONVERT(INT, CONVERT(VARBINARY(8), ", L"CONVERT(INT, CONVERT(VARBINARY(8), ", 35);
 		Token::Remove(open);
@@ -6186,7 +6186,7 @@ bool SqlParser::ParseFunctionHour(Token *name, Token *open)
 	}
 	else
 	// Convert to DATEPART in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "DATEPART", L"DATEPART", 8);
 		Append(open, "HH, ", L"HH, ", 4, name);
@@ -6234,7 +6234,7 @@ bool SqlParser::ParseFunctionHtmlEncode(Token *name, Token* /*open*/)
 	if(_target == SQL_ORACLE)
 		Token::Change(name, "HTF.ESCAPE_SC", L"HTF.ESCAPE_SC", 13);
 	else
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Remove(name);
 		Prepend(string, "SELECT ", L"SELECT ", 7, name);
@@ -6306,7 +6306,7 @@ bool SqlParser::ParseFunctionIdentity(Token *name, Token *open)
 	}
 	else
 	// Convert to ROW_NUMBER in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "ROW_NUMBER", L"ROW_NUMBER", 10);
 		Token::Remove(exp);
@@ -6384,7 +6384,7 @@ bool SqlParser::ParseFunctionIfnull(Token *name, Token *open)
 	}
 	else
 	// Convert to CASE expression in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CASE WHEN ", L"CASE WHEN ", 10);
 		Token::Remove(open);
@@ -6695,7 +6695,7 @@ bool SqlParser::ParseFunctionInsertstr(Token *name, Token *open)
 		}
 	}
 	else
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		int num = position->GetInt();
 
@@ -6768,7 +6768,7 @@ bool SqlParser::ParseFunctionInstanceId(Token *name, Token *open)
 	}
 	else
 	// Convert to @@SERVICENAME in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(exp == NULL)
 		{
@@ -6814,7 +6814,7 @@ bool SqlParser::ParseFunctionInstanceName(Token *name, Token *open)
 	}
 	else
 	// Convert to @@SERVICENAME in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(exp == NULL)
 		{
@@ -7013,7 +7013,7 @@ bool SqlParser::ParseFunctionInttohex(Token *name, Token *open)
 	}
 	else
 	// Convert to CONVERT in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CONVERT(VARBINARY(8), ", L"CONVERT(VARBINARY(8), ", 22);
 		Token::Remove(open);
@@ -7089,7 +7089,7 @@ bool SqlParser::ParseFunctionIsnull(Token *name, Token* /*open*/)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// In SQL Server, use ISNULL if there are 2 parameters, otherwise COALESCE
-	if(_target == SQL_SQL_SERVER && num > 2)
+	if(_target == SQL_BIGQUERY && num > 2)
 		Token::Change(name, "COALESCE", L"COALESCE", 8);
 	else
 	// Convert to NVL in Oracle
@@ -7211,7 +7211,7 @@ bool SqlParser::ParseFunctionLcase(Token *name, Token* /*open*/)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert to LOWER in Oracle, SQL Server
-	if(Target(SQL_ORACLE, SQL_SQL_SERVER) == true)
+	if(Target(SQL_ORACLE, SQL_BIGQUERY) == true)
 		Token::Change(name, "LOWER", L"LOWER", 5);
 
 	return true;
@@ -7311,7 +7311,7 @@ bool SqlParser::ParseFunctionLen(Token *name, Token* /*open*/)
 	bool spaces_included = true;
 
 	// SQL Server LEN excludes trailing spaces
-	if(_source == SQL_SQL_SERVER)
+	if(_source == SQL_BIGQUERY)
 		spaces_included = false;
 
 	// Convert to LENGTH in Oracle
@@ -7358,7 +7358,7 @@ bool SqlParser::ParseFunctionLength(Token *name, Token* /*open*/)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert to LEN in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "LEN", L"LEN", 3);
 	else
 	// Convert to CHAR_LENGTH in MySQL
@@ -7421,7 +7421,7 @@ bool SqlParser::ParseFunctionLesser(Token *name, Token *open)
 		Token::Change(name, "LEAST", L"LEAST", 5);
 	else
 	// Convert to CASE expression in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CASE WHEN ", L"CASE WHEN ", 10);
 		Token::Change(comma, " <", L" <", 2);
@@ -7464,7 +7464,7 @@ bool SqlParser::ParseFunctionList(Token *name, Token *open)
 
 	// STUFF and FOR XML XPATH in SQL Server (this is only the first part of conversion; it will be completed in 
 	// the end of SELECT
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "STUFF", L"STUFF", 5);
 		Append(open, "(SELECT ", L"(SELECT ", 8, name);
@@ -7625,7 +7625,7 @@ bool SqlParser::ParseFunctionLocate(Token *name, Token *open)
 	}
 	else
 	// Convert to CHARINDEX in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CHARINDEX", L"CHARINDEX", 9);
 
@@ -8204,7 +8204,7 @@ bool SqlParser::ParseFunctionMinute(Token *name, Token *open)
 	}
 	else
 	// Convert to DATEPART in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "DATEPART", L"DATEPART", 8);
 		Append(open, "MI, ", L"MI, ", 4, name);
@@ -8242,7 +8242,7 @@ bool SqlParser::ParseFunctionMod(Token *name, Token* /*open*/)
 
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Remove(name);
 		Token::Change(comma, " %", L" %", 2);
@@ -8333,7 +8333,7 @@ bool SqlParser::ParseFunctionMonthname(Token *name, Token *open)
 	}
 	else
 	// Convert to DATENAME in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "DATENAME", L"DATENAME", 8);
 		Append(open, "MONTH, ", L"MONTH, ", 7, name);
@@ -8372,7 +8372,7 @@ bool SqlParser::ParseFunctionMonthsBetween(Token *name, Token* /*open*/)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// dbo.MONTHS_BETWEEN UDF in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		PrependNoFormat(name, "dbo.", L"dbo.", 4);
 		
 	return true;	
@@ -8586,7 +8586,7 @@ bool SqlParser::ParseFunctionNextIdentity(Token *name, Token* /*open*/)
 		return false;
 
 	// Convert to IDENT_CURRENT + IDENT_INCR in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "IDENT_CURRENT", L"IDENT_CURRENT", 13);
 		Append(close, " + IDENT_INCR(", L" + IDENT_INCR(", 14);
@@ -8619,7 +8619,7 @@ bool SqlParser::ParseFunctionNow(Token *name, Token *open)
 	}
 	else
 	// Convert to GETDATE in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "GETDATE", L"GETDATE", 7);
 	
 	return true;	
@@ -8669,7 +8669,7 @@ bool SqlParser::ParseFunctionNumber(Token *name, Token *open)
 	}
 	else
 	// Convert to ROW_NUMBER in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "ROW_NUMBER", L"ROW_NUMBER", 10);
 		
@@ -8772,7 +8772,7 @@ bool SqlParser::ParseFunctionNvl(Token *name, Token* /*open*/)
 	if(num == 2)
 	{
 		// Convert to ISNULL in SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 			Token::Change(name, "ISNULL", L"ISNULL", 6);
 		else
 		// Convert to IFNULL in MySQL
@@ -8910,7 +8910,7 @@ bool SqlParser::ParseFunctionObjectOwnerId(Token *name, Token* /*open*/)
 		return false;
 
 	// Convert to OBJECTPROPERTY in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(database_id == NULL)
 		{
@@ -9404,7 +9404,7 @@ bool SqlParser::ParseFunctionQuarter(Token *name, Token *open)
 	}
 	else
 	// Convert to DATEPART in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "DATEPART", L"DATEPART", 8);
 		Append(open, "Q, ", L"Q, ", 3, name);
@@ -9720,7 +9720,7 @@ bool SqlParser::ParseFunctionRemainder(Token *name, Token* /*open*/)
 	if(_target == SQL_ORACLE && _source != SQL_ORACLE)
 		Token::Change(name, "MOD", L"MOD", 3);
 	else
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Remove(name);
 		Token::Change(comma, " %", L" %", 2);
@@ -9766,7 +9766,7 @@ bool SqlParser::ParseFunctionRepeat(Token *name, Token* /*open*/)
 	}
 	else
 	// Convert to REPLICATE in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "REPLICATE", L"REPLICATE", 9);
 
 	return true;
@@ -10167,7 +10167,7 @@ bool SqlParser::ParseFunctionSecond(Token *name, Token *open)
 	}
 	else
 	// Convert to DATEPART in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "DATEPART", L"DATEPART", 8);
 		Append(open, "SS, ", L"SS, ", 4, name);
@@ -10544,7 +10544,7 @@ bool SqlParser::ParseFunctionString(Token *name, Token* /*open*/)
 		Token::Remove(name);
 	else
 	// Convert to CONCAT in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "CONCAT", L"CONCAT", 6);
 
 	return true;
@@ -10677,7 +10677,7 @@ bool SqlParser::ParseFunctionStrReplace(Token *name, Token* /*open*/)
 	}
 	else
 	// Convert to REPLACE in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "REPLACE", L"REPLACE", 7);
 
@@ -10834,7 +10834,7 @@ bool SqlParser::ParseFunctionSubstr(Token *name, Token* /*open*/)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert to SUBSTRING in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "SUBSTRING", L"SUBSTRING", 9);
 
@@ -11196,7 +11196,7 @@ bool SqlParser::ParseFunctionSysdate(Token *name)
 		close = GetNextCharToken(')', L')');
 
 	// Convert to GETDATE in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(open != NULL)
 			Token::Change(name, "GETDATE", L"GETDATE", 7);
@@ -11248,7 +11248,7 @@ bool SqlParser::ParseFunctionSystimestamp(Token *name)
 		return false;
 
 	// Convert to GETDATE in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "GETDATE()", L"GETDATE()", 9);
 	else
 	// Convert to CURRENT_TIMESTAMP in DB2, MySQL, PostgreSQL, Greenplum
@@ -11571,7 +11571,7 @@ bool SqlParser::ParseFunctionToChar(Token *name, Token *open)
 	// Default format
 	if(format == NULL)
 	{
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "CONVERT(VARCHAR, ", L"CONVERT(VARCHAR, ", 17);
 			Token::Remove(open);
@@ -11612,7 +11612,7 @@ bool SqlParser::ParseFunctionToChar(Token *name, Token *open)
 		}
 		else
 		// Define a style for SQL Server
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			// YYYY-MM-DD
 			if(format->Compare("'YYYY-MM-DD'", L"'YYYY-MM-DD'", 12) == true)
@@ -11927,7 +11927,7 @@ bool SqlParser::ParseFunctionToDate(Token *name, Token *open)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// CONVERT(DATETIME, exp, style) in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CONVERT", L"CONVERT", 7);
 		Append(open, "DATETIME, ", L"DATETIME, ", 10);
@@ -11941,7 +11941,7 @@ bool SqlParser::ParseFunctionToDate(Token *name, Token *open)
 	if(format != NULL && format->type == TOKEN_STRING)
 	{
 		// For SQL Server, choose appropriate style
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			// YYYY-MM-DD, YYYY/MM/DD, DD-MON-YYYY recognized by default
 			if(format->Compare("'YYYY-MM-DD'", L"'YYYY-MM-DD'", 12) == true ||
@@ -12096,7 +12096,7 @@ bool SqlParser::ParseFunctionToday(Token *name, Token *open)
 	}
 	else
 	// Use GETDATE function in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CAST(GETDATE", L"CAST(GETDATE", 12);
 		Append(close, " AS DATE)", L" AS DATE)", 9, name);
@@ -12153,7 +12153,7 @@ bool SqlParser::ParseFunctionToNchar(Token *name, Token *open)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert to CONVERT in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		if(comma == NULL)
 		{
@@ -12313,7 +12313,7 @@ bool SqlParser::ParseFunctionToUnichar(Token *name, Token *open)
 		Token::Change(name, "TO_UNICHAR", L"TO_UNICHAR", 10);
 	else
 	// Convert to CONVERT in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "CONVERT(NVARCHAR, ", L"CONVERT(NVARCHAR, ", 18);
 		Token::Remove(open);
@@ -12414,7 +12414,7 @@ bool SqlParser::ParseFunctionTrim(Token *name, Token* /*open*/)
 	Token *close = GetNextCharToken(')', L')');
 
 	// Use LTRIM and RTRIM functions in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 	{
 		Token::Change(name, "RTRIM(LTRIM", L"LTRIM(RTRIM", 11);
 		Append(close, ")", L")", 1);
@@ -12468,7 +12468,7 @@ bool SqlParser::ParseFunctionTrunc(Token *name, Token *open)
 	// Default datetime truncation
 	if(unit == NULL && exp->data_type == TOKEN_DT_DATETIME)
 	{
-		if(_target == SQL_SQL_SERVER)
+		if(_target == SQL_BIGQUERY)
 		{
 			Token::Change(name, "CONVERT(DATETIME, CONVERT(DATE, ", L"CONVERT(DATETIME, CONVERT(DATE, ", 31);
 			Token::Remove(open);
@@ -12491,7 +12491,7 @@ bool SqlParser::ParseFunctionTrunc(Token *name, Token *open)
 		// 'DD' truncate to day
 		if(unit->Compare("'DD'", L"'DD'", 4) == true)
 		{
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				Token::Change(name, "CONVERT(DATETIME, CONVERT(DATE, ", L"CONVERT(DATETIME, CONVERT(DATE, ", 31);
 				Token::Remove(open);
@@ -12514,7 +12514,7 @@ bool SqlParser::ParseFunctionTrunc(Token *name, Token *open)
 		// 'MM' truncate to month
 		if(unit->Compare("'MM'", L"'MM'", 4) == true)
 		{
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 			{
 				Token::Change(name, "CONVERT(DATETIME, CONVERT(VARCHAR(7), ", 
 						L"CONVERT(DATETIME, CONVERT(VARCHAR(7), ", 38);
@@ -12695,7 +12695,7 @@ bool SqlParser::ParseFunctionUcase(Token *name, Token* /*open*/)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert to UPPER in Oracle, SQL Server
-	if(Target(SQL_ORACLE, SQL_SQL_SERVER) == true)
+	if(Target(SQL_ORACLE, SQL_BIGQUERY) == true)
 		Token::Change(name, "UPPER", L"UPPER", 5);
 
 	return true;
@@ -12790,7 +12790,7 @@ bool SqlParser::ParseFunctionUnistr(Token *name, Token* /*open*/)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert to NCHAR in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "NCHAR", L"NCHAR", 5);
 	else
 	// Convert to CHAR in MySQL
@@ -12836,7 +12836,7 @@ bool SqlParser::ParseFunctionUscalar(Token *name, Token* /*open*/)
 	/*Token *close */ (void) GetNextCharToken(')', L')');
 
 	// Convert to UNICODE in SQL Server
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "UNICODE", L"UNICODE", 7);
 
 	return true;
@@ -12849,7 +12849,7 @@ bool SqlParser::ParseFunctionUser(Token *name)
 		return false;
 
 	// Convert to SYSTEM_USER in SQL Server (CURRENT_USER is also supported but returns 'dbo' i.e.)
-	if(_target == SQL_SQL_SERVER)
+	if(_target == SQL_BIGQUERY)
 		Token::Change(name, "SYSTEM_USER", L"SYSTEM_USER", 11);
 	else
 	// Add parentheses in MySQL
@@ -12998,27 +12998,36 @@ bool SqlParser::ParseFunctionValue(Token *name, Token* /*open*/)
 	return true;
 }
 
-// DB2 VARCHAR
+// DB2 + BigQuery VARCHAR
 bool SqlParser::ParseFunctionVarchar(Token *name, Token* /*open*/)
 {
+
+    printf("1");
 	if(name == NULL)
+        printf("2");
 		return false;
 
 	// Possible conflict with data type, so check the source
-	if(_source != SQL_DB2)
+	if(_source != SQL_DB2 || _source != SQL_BIGQUERY)
+    {
+        printf("3");
 		return false;
-
+    }
 	Token *prev = GetPrevToken(name);
 
 	// For DB2 make sure the previous token is not a column name
 	if(prev != NULL && (prev->type == TOKEN_WORD || prev->type == TOKEN_IDENT))
+    {
+        printf("4");
 		return false;
-
+    }
 	Token *exp = GetNextToken();
 
 	if(exp == NULL)
+    {
+        printf("5");
 		return false;
-
+    }
 	ParseExpression(exp);
 
 	Token *comma = GetNextCharToken(',', L',');
@@ -13027,10 +13036,12 @@ bool SqlParser::ParseFunctionVarchar(Token *name, Token* /*open*/)
 	if(comma != NULL)
 	{
 		Token *exp2 = GetNextToken();
-
+        printf("6");
 		if(exp2 == NULL)
+        {
+            printf("7");
 			return false;
-
+        }
 		ParseExpression(exp2);
 	}
 
@@ -13040,6 +13051,12 @@ bool SqlParser::ParseFunctionVarchar(Token *name, Token* /*open*/)
 	if(_target == SQL_ORACLE)
 		Token::Change(name, "TO_CHAR", L"TO_CHAR", 7);
 
+    // Convert to STRING in BigQuery
+    if(_target == SQL_BIGQUERY)
+    {
+        printf("8");
+        Token::Change(name, "STRING", L"STRING", 6);
+    }
 	return true;
 }
 

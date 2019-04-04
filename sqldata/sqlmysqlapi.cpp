@@ -215,7 +215,7 @@ int SqlMysqlApi::InitStatic()
 		return -1;
 
 	// Initialize the MySQL library 
-	// mysql_library_init is not exported DLL function it is define for mysql_server_init
+	// mysql_library_init is not exported DLL function it is define for mySQL_BIGQUERY_init
 	// but by calling mysql_init we force mysql_library_init() call to initialize the library for the process
 	// Must be called before threads are launched, otherwise the application crashes on some systems
 	if(_mysql_init != NULL)
@@ -962,7 +962,7 @@ int SqlMysqlApi::local_infile_read(char *buf, unsigned int buf_len)
 			else
 			// ODBC indicator contains either NULL or length
 			if((_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_DB2 ||
-				_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_ODBC) 
+				_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_ODBC) 
 				&& _ldi_cols[k].ind != NULL)
 			{
 				len = (int)_ldi_cols[k].ind[i];
@@ -1000,7 +1000,7 @@ int SqlMysqlApi::local_infile_read(char *buf, unsigned int buf_len)
 				(_source_api_type == SQLDATA_SYBASE && _ldi_cols[k]._native_fetch_dt == CS_CHAR_TYPE) ||
 				// ODBC CHAR
 				((_source_api_type == SQLDATA_ODBC || _source_api_type == SQLDATA_INFORMIX || 
-				 _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_SERVER) && 
+				 _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_BIGQUERY) && 
 							_ldi_cols[k]._native_fetch_dt == SQL_C_CHAR))
 			{
 				// Copy data 
@@ -1132,7 +1132,7 @@ int SqlMysqlApi::local_infile_read(char *buf, unsigned int buf_len)
 			}
 			else
 			// ODBC TIMESTAMP fetched as SQL_TIMESTAMP_STRUCT
-			if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_DB2 || 
+			if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_DB2 || 
 				_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_ASA || 
 				_source_api_type == SQLDATA_ODBC) && _ldi_cols[k]._native_fetch_dt == SQL_C_TYPE_TIMESTAMP)
 			{

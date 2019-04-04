@@ -163,7 +163,7 @@ bool SqlParser::ParseProcedureSpAddType(Token *execute, Token *sp_addtype)
 	}
 
 	// Add statement delimiter if not set when source is SQL Server, Sybase ASE
-	SqlServerAddStmtDelimiter(true);
+	BigQueryAddStmtDelimiter(true);
 
 	return true;
 }
@@ -249,7 +249,7 @@ bool SqlParser::ParseProcedureSpBindRule(Token *execute, Token *sp_bindrule)
 	}
 
 	// Add statement delimiter if not set when source is SQL Server, Sybase ASE
-	SqlServerAddStmtDelimiter(true);
+	BigQueryAddStmtDelimiter(true);
 
 	return true;
 }

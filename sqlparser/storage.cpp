@@ -57,7 +57,7 @@ bool SqlParser::ParseTempTableOptions(Token *table_name, Token **start_out, Toke
 
 			Token *rows = GetNextWordToken("ROWS", L"ROWS", 4);
 
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 				Token::Remove(next, rows);
 			else
 			// Oracle does not support ON ROLLBACK, but DELETE ROWS in default on rollback
@@ -185,7 +185,7 @@ bool SqlParser::ParseStorageClause(Token *table_name, Token **id_start, Token **
 	if(_source == SQL_ORACLE && ParseOracleStorageClause() == true)
 		return true;
 
-	if(_source == SQL_SQL_SERVER && ParseSqlServerStorageClause() == true)
+	if(_source == SQL_BIGQUERY && ParseBigQueryStorageClause() == true)
 		return true;
 
 	if(_source == SQL_MYSQL && ParseMysqlStorageClause(table_name, id_start, comment) == true)
@@ -204,7 +204,7 @@ bool SqlParser::ParseStorageClause(Token *table_name, Token **id_start, Token **
 }
 
 // Parse SQL Server CREATE TABLE storage clause
-bool SqlParser::ParseSqlServerStorageClause()
+bool SqlParser::ParseBigQueryStorageClause()
 {
 	bool exists = false;
 
@@ -221,7 +221,7 @@ bool SqlParser::ParseSqlServerStorageClause()
 			// File group name
 			Token *name = GetNext();
 			
-			if(_target != SQL_SQL_SERVER)
+			if(_target != SQL_BIGQUERY)
 			{
 				// Remove clause if it is the default PRIMARY file group
 				if(Token::Compare(name, "PRIMARY", L"PRIMARY", 7) == true ||
@@ -591,7 +591,7 @@ bool SqlParser::ParseOracleStorageClause()
 			Token *name = GetNextIdentToken();
 
 			// ON name
-			if(_target == SQL_SQL_SERVER)
+			if(_target == SQL_BIGQUERY)
 				Token::Change(next, "ON", L"ON", 2);
 			else
 			// IN name

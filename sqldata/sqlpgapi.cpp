@@ -607,7 +607,7 @@ int SqlPgApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written, 
 			else
 			// ODBC indicator contains either NULL or length
 			if((_source_api_type == SQLDATA_INFORMIX || _source_api_type == SQLDATA_DB2 ||
-				_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_MYSQL ||
+				_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_MYSQL ||
 				_source_api_type == SQLDATA_ODBC) 
 				&& s_cols[k].ind != NULL)
 			{
@@ -649,7 +649,7 @@ int SqlPgApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written, 
 				(_source_api_type == SQLDATA_SYBASE && s_cols[k]._native_fetch_dt == CS_CHAR_TYPE) ||
 				// ODBC CHAR, BINARY
 				((_source_api_type == SQLDATA_ODBC || _source_api_type == SQLDATA_INFORMIX || 
-				 _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_SERVER) && 
+				 _source_api_type == SQLDATA_DB2 || _source_api_type == SQLDATA_SQL_BIGQUERY) && 
 				 (s_cols[k]._native_fetch_dt == SQL_C_CHAR || s_cols[k]._native_fetch_dt == SQL_C_BINARY ||
 				   s_cols[k]._native_fetch_dt == SQL_C_WCHAR)) ||
 				// MySQL CHAR
@@ -749,7 +749,7 @@ int SqlPgApi::TransferRows(SqlCol *s_cols, int rows_fetched, int *rows_written, 
 			}
 			else
 			// ODBC TIMESTAMP fetched as SQL_TIMESTAMP_STRUCT
-			if((_source_api_type == SQLDATA_SQL_SERVER || _source_api_type == SQLDATA_INFORMIX || 
+			if((_source_api_type == SQLDATA_SQL_BIGQUERY || _source_api_type == SQLDATA_INFORMIX || 
 				_source_api_type == SQLDATA_ASA || _source_api_type == SQLDATA_ODBC) && 
 				s_cols[k]._native_fetch_dt == SQL_C_TYPE_TIMESTAMP)
 			{

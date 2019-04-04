@@ -2061,7 +2061,7 @@ bool SqlParser::IsValidAlias(Token *token)
 	bool alias = true;
 
 	// DB2 allows almost any keyword as alias including WHERE, ORDER, SELECT 
-	if(Source(SQL_ORACLE, SQL_SQL_SERVER, SQL_DB2, SQL_INFORMIX, SQL_SYBASE) == false)
+	if(Source(SQL_ORACLE, SQL_BIGQUERY, SQL_DB2, SQL_INFORMIX, SQL_SYBASE) == false)
 	{
 		// List of not valid aliases for all databases
 		const char **a_array = g_no_alias;
@@ -2100,7 +2100,7 @@ bool SqlParser::IsValidAlias(Token *token)
 	}
 	else
 	// Check SQL Server and Sybase ASE list
-	if(_source == SQL_SQL_SERVER || _source == SQL_SYBASE)
+	if(_source == SQL_BIGQUERY || _source == SQL_SYBASE)
 	{
 		// Words not allowed as alias in SQL Server
 		if(Token::Compare(token, "DECLARE", L"DECLARE", 7) == true ||

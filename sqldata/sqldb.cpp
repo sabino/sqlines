@@ -239,7 +239,7 @@ SqlApiBase* SqlDb::CreateDatabaseApi(const char *conn, short *type)
 		cur += 3;
 
 		if(type != NULL)
-			*type = SQLDATA_SQL_SERVER;
+			*type = SQLDATA_SQL_BIGQUERY;
 	}
 	else
 	// Check for MySQL C API
@@ -1084,7 +1084,7 @@ int SqlDb::AssessRows(SqlDataReply &reply)
 		{
 			for(int k = 0; k < col_count; k++)
 			{
-				if(source_type == SQLDATA_DB2 || source_type == SQLDATA_SQL_SERVER || 
+				if(source_type == SQLDATA_DB2 || source_type == SQLDATA_SQL_BIGQUERY || 
 					source_type == SQLDATA_INFORMIX || source_type == SQLDATA_MYSQL ||
 					source_type == SQLDATA_ASA)
 				{
@@ -1294,14 +1294,14 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			// MySQL VARCHAR
 		   (source_type == SQLDATA_MYSQL && s_cols[i]._native_dt == MYSQL_TYPE_VAR_STRING) ||
 			// SQL Server, DB2, Informix, Sybase ASA VARCHAR
-		   ((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_DB2 || 
+		   ((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_DB2 || 
 				source_type == SQLDATA_INFORMIX || source_type == SQLDATA_ASA || source_type == SQLDATA_ODBC) 
 					&& s_cols[i]._native_dt == SQL_VARCHAR))
 		{
 			Str::IntToString((int)s_cols[i]._len, int1);
 
 			// VARCHAR2 or CLOB in Oracle
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 			{
 				if(s_cols[i]._len <= 8000)
 				{
@@ -1354,7 +1354,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		// Oracle CHAR
 		if((source_type == SQLDATA_ORACLE && s_cols[i]._native_dt == SQLT_AFC) ||
 			// SQL Server CHAR
-			(source_type == SQLDATA_SQL_SERVER && s_cols[i]._native_dt == SQL_CHAR) ||
+			(source_type == SQLDATA_SQL_BIGQUERY && s_cols[i]._native_dt == SQL_CHAR) ||
 			// Sybase ASE CHAR
 			(source_type == SQLDATA_SYBASE && s_cols[i]._native_dt == CS_CHAR_TYPE) ||
 			// Informix CHAR
@@ -1400,7 +1400,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
 		else
 		// SQL Server, Sybase ASA NCHAR
-		if(((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_ASA) && 
+		if(((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_ASA) && 
 			s_cols[i]._native_dt == SQL_WCHAR) ||
 			// DB2 GRAPHIC with code -95
 			(source_type == SQLDATA_DB2 && s_cols[i]._native_dt == -95))
@@ -1410,7 +1410,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			Str::IntToString((int)s_cols[i]._len, int1);
 
 			// NCHAR in SQL Server
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 			{
 				if(len <= 4000)
 				{
@@ -1448,7 +1448,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
 		else
 		// SQL Server, Sybase ASA NVARCHAR
-		if(((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_ASA) && 
+		if(((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_ASA) && 
 			s_cols[i]._native_dt == SQL_WVARCHAR) ||
 			// DB2 VARGRAPHIC with code -96
 			(source_type == SQLDATA_DB2 && s_cols[i]._native_dt == -96))
@@ -1465,7 +1465,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			}
 			else
 			// NVARCHAR in SQL Server
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 			{
 				if(len <= 4000)
 				{
@@ -1509,7 +1509,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		    (source_type == SQLDATA_ODBC && source_subtype == SQLDATA_ORACLE && s_cols[i]._native_dt == SQL_DECIMAL &&
 				s_cols[i]._precision < 10 && s_cols[i]._scale == 0) ||
 			// SQL Server, DB2, Informix, Sybase ASA INTEGER
-			((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_DB2 || 
+			((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_DB2 || 
 				source_type == SQLDATA_INFORMIX || source_type == SQLDATA_ASA) 
 							&& s_cols[i]._native_dt == SQL_INTEGER) ||
 			// Sybase ASE INT
@@ -1525,7 +1525,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
 		else
 		// SQL Server, DB2, Informix, Sybase ASA BIGINT (SQL_BIGINT -5)
-		if(((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_DB2 || 
+		if(((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_DB2 || 
 				source_type == SQLDATA_INFORMIX || source_type == SQLDATA_ASA) && 
 				s_cols[i]._native_dt == SQL_BIGINT) ||
 			// MySQL BIGINT
@@ -1544,7 +1544,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		// SMALLINT
 		if((source_type == SQLDATA_SYBASE && s_cols[i]._native_dt == CS_SMALLINT_TYPE) ||
 			(source_type == SQLDATA_MYSQL && s_cols[i]._native_dt == MYSQL_TYPE_SHORT) ||
-			((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_DB2 || 
+			((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_DB2 || 
 				source_type == SQLDATA_INFORMIX || source_type == SQLDATA_ASA) 
 					&& s_cols[i]._native_dt == SQL_SMALLINT))
 		{
@@ -1555,7 +1555,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
 		else
 		// SQL Server, MySQL, Sybase ASA TINYINT 
-		if(((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_ASA) && 
+		if(((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_ASA) && 
 				s_cols[i]._native_dt == SQL_TINYINT) ||
 			// Sybase TINYINT
 			(source_type == SQLDATA_SYBASE && s_cols[i]._native_dt == CS_TINYINT_TYPE) ||			
@@ -1565,7 +1565,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			if(target_type == SQLDATA_ORACLE)
 				sql += "NUMBER(3)";
 			else
-			if(target_type == SQLDATA_SQL_SERVER || target_type == SQLDATA_MYSQL)
+			if(target_type == SQLDATA_SQL_BIGQUERY || target_type == SQLDATA_MYSQL)
 				sql += "TINYINT";
 			else
 				sql += "INTEGER";
@@ -1575,7 +1575,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		if(source_type == SQLDATA_ORACLE && s_cols[i]._native_dt == SQLT_NUM && 
 			((s_cols[i]._precision == 0 && s_cols[i]._scale == 129) || s_cols[i]._precision >= 38)) 
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "FLOAT";
 			else
 			if(target_type == SQLDATA_ORACLE)
@@ -1590,10 +1590,10 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		// MySQL DOUBLE
 		if((source_type == SQLDATA_MYSQL && s_cols[i]._native_dt == MYSQL_TYPE_DOUBLE) ||
 			// SQL Server, ODBC FLOAT
-			((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_ODBC) && 
+			((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_ODBC) && 
 				s_cols[i]._native_dt == SQL_FLOAT))
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "FLOAT";
 			else
 			if(target_type == SQLDATA_ORACLE)
@@ -1608,11 +1608,11 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		// Informix single-precision floating point number SMALLFLOAT, REAL
 		if((source_type == SQLDATA_INFORMIX && s_cols[i]._native_dt == SQL_REAL) ||
 			// DB2 FLOAT, SQL Server REAL, Sybase ASA single-precision FLOAT
-			((source_type == SQLDATA_DB2 || source_type == SQLDATA_SQL_SERVER || 
+			((source_type == SQLDATA_DB2 || source_type == SQLDATA_SQL_BIGQUERY || 
 				source_type == SQLDATA_ASA) && 
 				s_cols[i]._native_dt == SQL_REAL))
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "FLOAT";
 			else
 			if(target_type == SQLDATA_ORACLE)
@@ -1626,7 +1626,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		if((source_type == SQLDATA_INFORMIX || source_type == SQLDATA_ASA) && 
 			s_cols[i]._native_dt == SQL_DOUBLE)
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "FLOAT";
 			else
 		    if(target_type == SQLDATA_ORACLE)
@@ -1640,7 +1640,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			// Sybase ASE FLOAT
 			(source_type == SQLDATA_SYBASE && s_cols[i]._native_dt == CS_FLOAT_TYPE))
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "REAL";
 			else
 			if(target_type == SQLDATA_ORACLE)
@@ -1656,7 +1656,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			// Sybase ASE NUMERIC and DECIMAL
 			(source_type == SQLDATA_SYBASE && (s_cols[i]._native_dt == CS_NUMERIC_TYPE || s_cols[i]._native_dt == CS_DECIMAL_TYPE)) ||
 			// SQL Server, DB2, Informix, Sybase ASA DECIMAL/NUMERIC
-			((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_DB2 || 
+			((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_DB2 || 
 				source_type == SQLDATA_INFORMIX || source_type == SQLDATA_ASA) && 
 				(s_cols[i]._native_dt == SQL_DECIMAL || s_cols[i]._native_dt == SQL_NUMERIC)) ||
 			// MySQL DECIMAL or NUMERIC
@@ -1688,7 +1688,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		// Sybase ASE MONEY
 		if(source_type == SQLDATA_SYBASE && s_cols[i]._native_dt == CS_MONEY_TYPE)
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "MONEY";
 			else
 			{
@@ -1704,7 +1704,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		// Sybase ASE SMALLMONEY
 		if(source_type == SQLDATA_SYBASE && s_cols[i]._native_dt == CS_MONEY4_TYPE)
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "SMALLMONEY";
 			else
 			{
@@ -1736,7 +1736,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			// Sybase ASE DATETIME
 			(source_type == SQLDATA_SYBASE && s_cols[i]._native_dt == CS_DATETIME_TYPE) || 
 			// SQL Server, DB2, Informix, Sybase ASA, ODBC DATETIME
-		   ((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_DB2 || 
+		   ((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_DB2 || 
 				source_type == SQLDATA_INFORMIX || source_type == SQLDATA_ASA || 
 				source_type == SQLDATA_ODBC) && 
 					s_cols[i]._native_dt == SQL_TYPE_TIMESTAMP))
@@ -1746,8 +1746,8 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			// Define fractional seconds precision
 			sprintf(fraction, "%d", s_cols[i]._scale);
 
-			if(target_type == SQLDATA_SQL_SERVER)
-				sql += "DATETIME2";
+			if(target_type == SQLDATA_SQL_BIGQUERY)
+				sql += "DATETIME";
 			else
 			if(target_type == SQLDATA_MYSQL)
 			{
@@ -1775,7 +1775,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			// Define fractional seconds precision
 			sprintf(fraction, "%d", s_cols[i]._scale);
 
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 			{
 				sql += "DATETIMEOFFSET(";
 				sql += fraction;
@@ -1795,17 +1795,17 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
 		else
 		// ODBC, SQL Server, DB2, Informix, Sybase ASA TIME
-		if(((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_DB2 || 
+		if(((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_DB2 || 
 			source_type == SQLDATA_INFORMIX || source_type == SQLDATA_ASA ||
 			source_type == SQLDATA_ODBC) && s_cols[i]._native_dt == SQL_TYPE_TIME) ||
-			(source_type == SQLDATA_SQL_SERVER && s_cols[i]._native_dt == SQL_SS_TIME2))
+			(source_type == SQLDATA_SQL_BIGQUERY && s_cols[i]._native_dt == SQL_SS_TIME2))
 		{
 			char fraction[11]; 
 
 			// Define fractional seconds precision
 			sprintf(fraction, "%d", s_cols[i]._scale);
 
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 			{
 				sql += "TIME(";
 				sql += fraction;
@@ -1831,7 +1831,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			// Define fractional seconds precision
 			sprintf(fraction, "%d", s_cols[i]._scale);
 
-			if(target_type == SQLDATA_SQL_SERVER || target_type == SQLDATA_MYSQL)
+			if(target_type == SQLDATA_SQL_BIGQUERY || target_type == SQLDATA_MYSQL)
 				sql += "VARCHAR(30)";
 			else
 			if(target_type == SQLDATA_ORACLE)
@@ -1843,7 +1843,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
 		else
 		// SQL Server, DB2, Informix, Sybase ASA DATE 
-		if(((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_DB2 || 
+		if(((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_DB2 || 
 				source_type == SQLDATA_INFORMIX || source_type == SQLDATA_ASA) && 
 				s_cols[i]._native_dt == SQL_TYPE_DATE) ||
 			// MySQL DATE
@@ -1864,7 +1864,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
         else
 		// SQL Server BINARY
-		if(source_type == SQLDATA_SQL_SERVER && s_cols[i]._native_dt == SQL_BINARY)
+		if(source_type == SQLDATA_SQL_BIGQUERY && s_cols[i]._native_dt == SQL_BINARY)
 		{
 			if(target_type == SQLDATA_MYSQL)
 			{
@@ -1877,7 +1877,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		// Oracle RAW
 		if((source_type == SQLDATA_ORACLE && s_cols[i]._native_dt == SQLT_BIN) ||
 			// SQL Server VARBINARY
-			(source_type == SQLDATA_SQL_SERVER && s_cols[i]._native_dt == SQL_VARBINARY &&
+			(source_type == SQLDATA_SQL_BIGQUERY && s_cols[i]._native_dt == SQL_VARBINARY &&
 			 s_cols[i]._lob == false) || 
 			// Sybase ASA BINARY is variable-length (!) data type			
 			(source_type == SQLDATA_ASA && s_cols[i]._native_dt == SQL_BINARY))
@@ -1886,7 +1886,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			Str::IntToString(len, int1);
 
             // VARBINARY(n | MAX) in SQL Server
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 			{
                 sql += "VARBINARY(";
 
@@ -1938,7 +1938,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			// MySQL CLOB
 			(source_type == SQLDATA_MYSQL && s_cols[i]._native_dt == MYSQL_TYPE_BLOB && s_cols[i]._binary == false))
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "VARCHAR(MAX)";
 			else
 			if(target_type == SQLDATA_ORACLE)
@@ -1952,11 +1952,11 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
 		else
 		// SQL Server NTEXT, Sybase ASA LONG NVARCHAR
-		if((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_INFORMIX || 
+		if((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_INFORMIX || 
 			source_type == SQLDATA_ASA || source_type == SQLDATA_ODBC) 
 			&& s_cols[i]._native_dt == SQL_WLONGVARCHAR)
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "NVARCHAR(MAX)";
 			else
 			if(target_type == SQLDATA_ORACLE)
@@ -1972,11 +1972,11 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		// Oracle BLOB, ODBC BLOB
 		if((source_type == SQLDATA_ORACLE && s_cols[i]._native_dt == SQLT_BLOB) ||
 			// SQL Server IMAGE, Informix BYTE, Sybase ASA LONG BINARY
-			((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_DB2 || source_type == SQLDATA_INFORMIX || 
+			((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_DB2 || source_type == SQLDATA_INFORMIX || 
 				source_type == SQLDATA_ASA || source_type == SQLDATA_ODBC)
 				&& s_cols[i]._native_dt == SQL_LONGVARBINARY) ||
 		    // SQL Server VARBINARY(max)
-			(source_type == SQLDATA_SQL_SERVER && s_cols[i]._native_dt == SQL_VARBINARY &&
+			(source_type == SQLDATA_SQL_BIGQUERY && s_cols[i]._native_dt == SQL_VARBINARY &&
 			 s_cols[i]._lob == true) ||
 			// DB2 BLOB with code -98
 			(source_type == SQLDATA_DB2 && s_cols[i]._native_dt == -98) ||
@@ -1985,7 +1985,7 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 			// MySQL BLOB
 			(source_type == SQLDATA_MYSQL && s_cols[i]._native_dt == MYSQL_TYPE_BLOB && s_cols[i]._binary == true))
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "VARBINARY(MAX)";
 			else
 			if(target_type == SQLDATA_ORACLE)
@@ -1999,14 +1999,14 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
 		else
 		// SQL Server XML
-		if((source_type == SQLDATA_SQL_SERVER && s_cols[i]._native_dt == SQL_SS_XML) ||
+		if((source_type == SQLDATA_SQL_BIGQUERY && s_cols[i]._native_dt == SQL_SS_XML) ||
 		  // DB2 XML with code -370
 		  (source_type == SQLDATA_DB2 && s_cols[i]._native_dt == -370))
 		{
 			if(target_type == SQLDATA_ORACLE)
 				sql += "XMLTYPE";
             else
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "XML";
             else
             if(target_type == SQLDATA_MYSQL)
@@ -2019,23 +2019,23 @@ int SqlDb::GenerateCreateTable(SqlCol *s_cols, const char *s_table, const char *
 		}
 		else
 		// SQL Server, Sybase ASA BIT, Informix BOOLEAN (SQL_BIT -7)
-		if(((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_INFORMIX || 
+		if(((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_INFORMIX || 
 			source_type == SQLDATA_ASA) && 
 			s_cols[i]._native_dt == SQL_BIT) ||
 			// Sybase ASE BIT
 			(source_type == SQLDATA_SYBASE && s_cols[i]._native_dt == CS_BIT_TYPE))
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
-				sql += "BIT";
+			if(target_type == SQLDATA_SQL_BIGQUERY)
+				sql += "BOOLEAN";
 			else
 				sql += "CHAR(1)";
 		}
 		else
 		// Sybase ASA UNIQUEIDENTIFIER (SQL_GUID -11)
-		if((source_type == SQLDATA_SQL_SERVER || source_type == SQLDATA_ASA) && 
+		if((source_type == SQLDATA_SQL_BIGQUERY || source_type == SQLDATA_ASA) && 
 			s_cols[i]._native_dt == SQL_GUID)
 		{
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 				sql += "UNIQUEIDENTIFIER";
 			else
 				sql += "CHAR(36)";
@@ -2163,7 +2163,7 @@ int SqlDb::GetInlineIdentityClause(const char *s_table, char *column, std::strin
 	if(s_table == NULL || column == NULL)
 		return -1;
 
-	if(target_type != SQLDATA_SQL_SERVER && target_type != SQLDATA_MYSQL)
+	if(target_type != SQLDATA_SQL_BIGQUERY && target_type != SQLDATA_MYSQL)
 		return 0;
 
 	std::list<SqlColMeta> *table_columns = _metaSqlDb->GetTableColumns(SQLDB_SOURCE_ONLY);
@@ -2195,7 +2195,7 @@ int SqlDb::GetInlineIdentityClause(const char *s_table, char *column, std::strin
 		{
 			char int1[21];
 
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 			{
 				identity_clause += "IDENTITY(";
 				identity_clause += Str::IntToString((*i).id_next, int1);
@@ -2294,7 +2294,7 @@ void SqlDb::MapColumn(const char *s_table, const char *s_name, std::string &t_na
 		return;
 
 	// Enclose column names to prevent reserved word conflicts
-	if(target_type == SQLDATA_SQL_SERVER)
+	if(target_type == SQLDATA_SQL_BIGQUERY)
 	{
 		t_name += '[';
 		t_name += s_name;
@@ -3102,7 +3102,7 @@ int SqlDb::GetColumnDataLen(SqlCol *cols, int row, int column, int db_type, SqlA
 			len = cols[column].ind[row];
 	}
 	else
-	if(db_type == SQLDATA_SQL_SERVER || db_type == SQLDATA_INFORMIX)
+	if(db_type == SQLDATA_SQL_BIGQUERY || db_type == SQLDATA_INFORMIX)
 	{
 		if(cols[column].ind != NULL && cols[column].ind[row] != -1)
 			len = cols[column].ind[row];
@@ -3159,7 +3159,7 @@ int SqlDb::GetColumnData(SqlCol *cols, int row, int column, int db_type, SqlApiB
 		s = cols[column]._data + cols[column]._fetch_len * row;
 	}
 	else
-	if(db_type == SQLDATA_SQL_SERVER || db_type == SQLDATA_INFORMIX)
+	if(db_type == SQLDATA_SQL_BIGQUERY || db_type == SQLDATA_INFORMIX)
 	{
 		if(cols[column]._native_fetch_dt == SQL_C_CHAR || cols[column]._native_fetch_dt == SQL_C_BINARY)
 			s = cols[column]._data + cols[column]._fetch_len * row;
@@ -3359,7 +3359,7 @@ int SqlDb::BuildQuery(std::string &s_query, std::string &t_query, const char *s_
 					s_query += c;
 					s_query += "\"";	
 
-					if(target_type == SQLDATA_SQL_SERVER)
+					if(target_type == SQLDATA_SQL_BIGQUERY)
 					{
 						t_query += '[';
 						t_query += c;
@@ -3650,7 +3650,7 @@ int SqlDb::BuildQueryAddOrder(std::string &s_query, std::string &s_schema, std::
 					t_query.append(" COLLATE ").append(_mysql_validation_collate);
 			}
 			else
-			if(target_type == SQLDATA_SQL_SERVER)
+			if(target_type == SQLDATA_SQL_BIGQUERY)
 			{
 				if(type == "String")
 					t_query.append(" COLLATE Latin1_General_bin");
