@@ -1074,7 +1074,7 @@ bool SqlParser::ParseFunctionWithoutParameters(Token *name)
 		exists = ParseFunctionDate(name);
 	else
 	if(name->Compare("INTERVAL", L"INTERVAL", 8) == true)
-		exists = ParseFunctionInterval(name);
+	    exists = ParseFunctionInterval(name);
 	else
 	if(name->Compare("LOCALTIMESTAMP", L"LOCALTIMESTAMP", 14) == true)
 		exists = ParseFunctionLocaltimestamp(name);

@@ -2965,6 +2965,8 @@ bool SqlParser::ParseMultiplicationOperator(Token *first)
 	if(asterisk == NULL)
 		return false;
 
+	printf("\nfound asterisk\n");
+
 	Token *second = GetNextToken();
 
 	if(second == NULL)
@@ -2984,7 +2986,7 @@ bool SqlParser::ParseAdditionOperator(Token *first, int prev_operator)
 	
 	Token *first_end = GetLastToken();
 
-	Token *plus = GetNextPlusMinusAsOperatorToken('+', L'+');
+	Token *plus = GetNextCharToken('+', L'+');
 
 	if(plus == NULL)
 		return false;
@@ -3062,15 +3064,13 @@ bool SqlParser::ParseAdditionOperator(Token *first, int prev_operator)
 		}
 	}
 	else
-	// Check for DB2 interval +/- expressions
-	if(_source == SQL_DB2 && second->data_type == TOKEN_DT_INTERVAL)
-	{
-		if(_target == SQL_BIGQUERY)
-			BigQueryToDateAdd(plus, first, first_end, second, second_end);
+    if(_target == SQL_BIGQUERY)
+    {
+        BigQueryToDateAdd(plus, first, first_end, second, second_end);
+    }
 
-		// Check for a +/- chain of interval expressions: for example, + expr MONTH - expr DAYS + ...
-		ParseAddSubIntervalChain(first, SQL_OPERATOR_PLUS);
-	}
+    // Check for a +/- chain of interval expressions: for example, + expr MONTH - expr DAYS + ...
+    ParseAddSubIntervalChain(first, SQL_OPERATOR_PLUS);
 
 	return true;
 }
@@ -3458,6 +3458,8 @@ bool SqlParser::ParseSubtractionOperator(Token *first)
 
 	if(minus == NULL)
 		return false;
+
+	printf("\nfound minus!\n");
 
 	Token *second = GetNextToken();
 

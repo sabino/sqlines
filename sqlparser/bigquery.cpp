@@ -455,32 +455,32 @@ void SqlParser::BigQueryToDateAdd(Token *op, Token *first, Token *first_end, Tok
 	if(op == NULL || first == NULL || second == NULL)
 		return;
 
-	PREPEND(first, "DATEADD(");
+	PREPEND(second, "DATE_ADD(");
 
-	if(second->data_subtype == TOKEN_DT2_INTVL_MON)
-		PREPEND_NOFMT(first, "mm");
-	else
-	if(second->data_subtype == TOKEN_DT2_INTVL_DAY)
-		PREPEND_NOFMT(first, "dd");
-	else
-	if(second->data_subtype == TOKEN_DT2_INTVL_MIN)
-		PREPEND_NOFMT(first, "mi");
-	else
-	if(second->data_subtype == TOKEN_DT2_INTVL_SEC)
-		PREPEND_NOFMT(first, "ss");
+//	if(second->data_subtype == TOKEN_DT2_INTVL_MON)
+//		PREPEND_NOFMT(first, "mm");
+//	else
+//	if(second->data_subtype == TOKEN_DT2_INTVL_DAY)
+//		PREPEND_NOFMT(first, "dd");
+//	else
+//	if(second->data_subtype == TOKEN_DT2_INTVL_MIN)
+//		PREPEND_NOFMT(first, "mi");
+//	else
+//	if(second->data_subtype == TOKEN_DT2_INTVL_SEC)
+//		PREPEND_NOFMT(first, "ss");
 
-	PREPEND_NOFMT(first, ", ");
+//	PREPEND_NOFMT(first, ", ");
 
 	// Copy - sign only, + will not be used
 	if(TOKEN_CMPC(op, '-'))
-		PrependCopy(first, op);
+		PrependCopy(second, op);
 
-	PrependCopy(first, second, second_end, false);
+	PrependCopy(second, first, first_end, false);
 
-	PREPEND_NOFMT(first, ", ");
-	APPEND_NOFMT(first_end, ")");
-
-	Token::Remove(op, second_end);
+	PREPEND_NOFMT(second, ", ");
+	APPEND_NOFMT(second_end, ")");
+	
+	Token::Remove(first, op);
 }
 
 // SQL Server, Sybase ASE EXEC procedure statement
